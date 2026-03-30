@@ -1,0 +1,1632 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Hướng dẫn Xây dựng Hệ thống Smart Home {% endblock %}
+
+{% block stylesheets %}
+<style>
+    .guide-section {
+        background: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .step-number {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #0d6efd, #6610f2);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    .step-card {
+        border-left: 4px solid #0d6efd;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+        border-radius: 0 8px 8px 0;
+    }
+    .code-block {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.9rem;
+        margin: 15px 0;
+        white-space: pre;
+    }
+    .code-block .comment { color: #6a9955; }
+    .code-block .keyword { color: #569cd6; }
+    .code-block .string { color: #ce9178; }
+    .code-block .function { color: #dcdcaa; }
+    .code-block .class { color: #4ec9b0; }
+    .file-structure {
+        background: #2d2d2d;
+        color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: monospace;
+        white-space: pre;
+    }
+    .file-structure .folder { color: #e8a838; }
+    .file-structure .file { color: #75beff; }
+    .tech-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        margin: 5px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .tech-python { background: #306998; color: white; }
+    .tech-django { background: #092e20; color: white; }
+    .tech-js { background: #f7df1e; color: #000; }
+    .tech-mqtt { background: #660066; color: white; }
+    .tech-sqlite { background: #003b57; color: white; }
+    .tech-redis { background: #dc382d; color: white; }
+    .warning-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px 20px;
+        border-radius: 0 8px 8px 0;
+        margin: 15px 0;
+    }
+    .info-box {
+        background: #cff4fc;
+        border-left: 4px solid #0dcaf0;
+        padding: 15px 20px;
+        border-radius: 0 8px 8px 0;
+        margin: 15px 0;
+    }
+    .success-box {
+        background: #d1e7dd;
+        border-left: 4px solid #198754;
+        padding: 15px 20px;
+        border-radius: 0 8px 8px 0;
+        margin: 15px 0;
+    }
+    .question-box {
+        background: #e7e3ff;
+        border-left: 4px solid #6f42c1;
+        padding: 15px 20px;
+        border-radius: 0 8px 8px 0;
+        margin: 15px 0;
+    }
+    .toc-list {
+        background: #f8f9fa;
+        padding: 20px 30px;
+        border-radius: 8px;
+    }
+    .toc-list li {
+        padding: 8px 0;
+        border-bottom: 1px dashed #dee2e6;
+    }
+    .toc-list li:last-child { border-bottom: none; }
+    .toc-list a { text-decoration: none; color: #0d6efd; }
+    .toc-list a:hover { text-decoration: underline; }
+    .architecture-diagram {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px;
+        border-radius: 12px;
+        color: white;
+        text-align: center;
+    }
+    .arch-box {
+        background: rgba(255,255,255,0.2);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px;
+        backdrop-filter: blur(10px);
+    }
+    .arrow-down { font-size: 2rem; margin: 10px 0; }
+    .flow-diagram {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+    .flow-box {
+        background: white;
+        border: 2px solid #0d6efd;
+        padding: 15px 20px;
+        border-radius: 8px;
+        text-align: center;
+        min-width: 120px;
+    }
+    .flow-arrow {
+        font-size: 1.5rem;
+        color: #0d6efd;
+    }
+    .model-table {
+        font-size: 0.9rem;
+    }
+    .model-table th {
+        background: #0d6efd;
+        color: white;
+    }
+    .model-table code {
+        background: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<main class="content">
+    {% include 'includes/navigation.html' %}
+    
+    <div class="py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3">
+                    <i class="fas fa-book me-2 text-primary"></i>
+                    Hướng dẫn Xây dựng Hệ thống Smart Home từ A-Z
+                </h2>
+                <p class="text-muted mb-0">Chi tiết quá trình thiết kế và phát triển cho người mới bắt đầu</p>
+            </div>
+            <div>
+                <a href="{% url 'esp32_hardware_guide' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-microchip me-1"></i> Hướng dẫn ESP32
+                </a>
+            </div>
+        </div>
+        
+        <!-- Mục lục -->
+        <div class="guide-section">
+            <h4><i class="fas fa-list-ol me-2"></i>Mục lục</h4>
+            <ol class="toc-list">
+                <li><a href="#part1">Phần 1: Tổng quan & Phân tích yêu cầu hệ thống</a></li>
+                <li><a href="#part2">Phần 2: Thiết kế Database (Models)</a></li>
+                <li><a href="#part3">Phần 3: Xây dựng Backend (Views, URLs)</a></li>
+                <li><a href="#part4">Phần 4: Giao tiếp MQTT với ESP32</a></li>
+                <li><a href="#part5">Phần 5: WebSocket Realtime</a></li>
+                <li><a href="#part6">Phần 6: Tích hợp Face Recognition</a></li>
+                <li><a href="#part7">Phần 7: Frontend & Dashboard</a></li>
+                <li><a href="#part8">Phần 8: Deploy & Vận hành</a></li>
+            </ol>
+        </div>
+        
+        <!-- PHẦN 1: TỔNG QUAN -->
+        <div class="guide-section" id="part1">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number me-3">1</div>
+                <h4 class="mb-0">Tổng quan & Phân tích yêu cầu hệ thống</h4>
+            </div>
+            
+            <h5 class="mt-4 text-primary"><i class="fas fa-question-circle me-2"></i>1.1. Bài toán đặt ra</h5>
+            
+            <div class="question-box">
+                <strong>Câu hỏi:</strong> Chúng ta muốn xây dựng cái gì?<br><br>
+                <strong>Trả lời:</strong> Một hệ thống Smart Home cho phép:
+                <ul class="mb-0 mt-2">
+                    <li>Điều khiển các thiết bị điện (đèn, quạt, cửa...) từ xa qua web</li>
+                    <li>Giám sát các thông số môi trường (nhiệt độ, độ ẩm, ánh sáng...)</li>
+                    <li>Mở cửa tự động bằng nhận diện khuôn mặt</li>
+                    <li>Xem camera an ninh từ xa</li>
+                    <li>Nhận thông báo realtime khi có thay đổi</li>
+                </ul>
+            </div>
+            
+            <h5 class="mt-4 text-primary"><i class="fas fa-puzzle-piece me-2"></i>1.2. Phân tích các thành phần cần có</h5>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-microchip me-2 text-warning"></i>Phần cứng (Hardware)</h6>
+                        <ul class="mb-0">
+                            <li><strong>ESP32/ESP8266</strong> - Vi điều khiển kết nối WiFi</li>
+                            <li><strong>Relay Module</strong> - Điều khiển bật/tắt thiết bị điện</li>
+                            <li><strong>Cảm biến DHT22</strong> - Đo nhiệt độ, độ ẩm</li>
+                            <li><strong>ESP32-CAM</strong> - Camera + nhận diện</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-server me-2 text-primary"></i>Phần mềm (Software)</h6>
+                        <ul class="mb-0">
+                            <li><strong>Web Server</strong> - Hiển thị dashboard, xử lý logic</li>
+                            <li><strong>Database</strong> - Lưu trữ dữ liệu thiết bị, user</li>
+                            <li><strong>MQTT Broker</strong> - Giao tiếp với ESP32</li>
+                            <li><strong>WebSocket</strong> - Cập nhật realtime trên web</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mt-4 text-primary"><i class="fas fa-project-diagram me-2"></i>1.3. Luồng hoạt động</h5>
+            
+            <p><strong>Kịch bản:</strong> Người dùng bật đèn từ web</p>
+            <div class="flow-diagram">
+                <div class="flow-box">
+                    <i class="fas fa-user fa-2x text-primary mb-2"></i><br>
+                    <small>User click<br>"Bật đèn"</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-server fa-2x text-success mb-2"></i><br>
+                    <small>Django<br>nhận request</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-broadcast-tower fa-2x text-purple mb-2"></i><br>
+                    <small>Gửi qua<br>MQTT</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-microchip fa-2x text-warning mb-2"></i><br>
+                    <small>ESP32<br>nhận lệnh</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-lightbulb fa-2x text-danger mb-2"></i><br>
+                    <small>Relay ON<br>Đèn sáng</small>
+                </div>
+            </div>
+            
+            <h5 class="mt-4 text-primary"><i class="fas fa-sitemap me-2"></i>1.4. Kiến trúc tổng thể</h5>
+            
+            <div class="architecture-diagram">
+                <h5 class="mb-4">Smart Home Architecture</h5>
+                <div class="row justify-content-center">
+                    <div class="col-md-3">
+                        <div class="arch-box">
+                            <i class="fas fa-laptop fa-2x mb-2"></i>
+                            <div><strong>Web Browser</strong></div>
+                            <small>Dashboard UI</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="arrow-down">↓↑ HTTP/WebSocket</div>
+                <div class="row justify-content-center">
+                    <div class="col-md-4">
+                        <div class="arch-box">
+                            <i class="fas fa-server fa-2x mb-2"></i>
+                            <div><strong>Django Server</strong></div>
+                            <small>Views + Channels + MQTT Client</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="arrow-down">↓↑</div>
+                <div class="row justify-content-center">
+                    <div class="col-md-3">
+                        <div class="arch-box">
+                            <i class="fas fa-broadcast-tower fa-2x mb-2"></i>
+                            <div><strong>MQTT Broker</strong></div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="arch-box">
+                            <i class="fas fa-database fa-2x mb-2"></i>
+                            <div><strong>Database</strong></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="arrow-down">↓↑ MQTT</div>
+                <div class="row justify-content-center">
+                    <div class="col-md-2">
+                        <div class="arch-box">
+                            <i class="fas fa-microchip fa-2x mb-2"></i>
+                            <div><strong>ESP32</strong></div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="arch-box">
+                            <i class="fas fa-camera fa-2x mb-2"></i>
+                            <div><strong>ESP32-CAM</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h5 class="mt-4 text-primary"><i class="fas fa-tools me-2"></i>1.5. Stack công nghệ</h5>
+            
+            <div class="mt-3">
+                <span class="tech-badge tech-python"><i class="fab fa-python me-1"></i>Python 3.10+</span>
+                <span class="tech-badge tech-django">Django 4.2</span>
+                <span class="tech-badge" style="background:#00d1b2;color:white;">Django Channels</span>
+                <span class="tech-badge tech-mqtt">Paho MQTT</span>
+                <span class="tech-badge tech-redis">Redis</span>
+                <span class="tech-badge tech-sqlite">SQLite</span>
+                <span class="tech-badge tech-js"><i class="fab fa-js me-1"></i>JavaScript</span>
+                <span class="tech-badge" style="background:#ff6b6b;color:white;">InsightFace</span>
+            </div>
+            
+            <div class="success-box mt-4">
+                <strong><i class="fas fa-lightbulb me-2"></i>Kết luận Phần 1:</strong> Đã xác định được các tính năng, thành phần, luồng hoạt động và công nghệ sử dụng.
+                <br><br>
+                <strong>Bước tiếp theo:</strong> Thiết kế Database (Models) để lưu trữ dữ liệu.
+            </div>
+        </div>
+        
+        <!-- PHẦN 2: THIẾT KẾ DATABASE -->
+        <div class="guide-section" id="part2">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number me-3">2</div>
+                <h4 class="mb-0">Thiết kế Database (Models)</h4>
+            </div>
+
+            <div class="question-box">
+                <strong><i class="fas fa-question-circle me-2"></i>Database là gì? Tại sao cần?</strong><br><br>
+                Database (cơ sở dữ liệu) giống như một <strong>cuốn sổ ghi chép</strong> của hệ thống:
+                <ul class="mb-0 mt-2">
+                    <li>📝 Ghi nhớ ai đăng nhập (User)</li>
+                    <li>💡 Ghi nhớ có những thiết bị nào, đang bật hay tắt (Device)</li>
+                    <li>🌡️ Ghi nhớ lịch sử nhiệt độ theo thời gian (SensorLog)</li>
+                    <li>👤 Ghi nhớ khuôn mặt ai được mở cửa (FaceUser)</li>
+                </ul>
+                <br>
+                <em>Nếu không có database, mỗi lần tắt máy tính → mất hết dữ liệu!</em>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-brain me-2"></i>2.1. Cách tư duy: Từ yêu cầu → Bảng dữ liệu</h5>
+            
+            <p>Hãy nghĩ đơn giản: <strong>Mỗi "thứ" cần lưu trữ = 1 bảng (table)</strong></p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <h6><i class="fas fa-clipboard-list me-2 text-primary"></i>Yêu cầu hệ thống</h6>
+                        <ol class="mb-0">
+                            <li>Người dùng đăng nhập</li>
+                            <li>Quản lý thiết bị (đèn, quạt...)</li>
+                            <li>Xem lịch sử cảm biến</li>
+                            <li>Nhận diện khuôn mặt mở cửa</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <h6><i class="fas fa-database me-2 text-success"></i>Bảng cần tạo</h6>
+                        <ol class="mb-0">
+                            <li><code>User</code> + <code>Profile</code></li>
+                            <li><code>Device</code></li>
+                            <li><code>SensorLog</code></li>
+                            <li><code>FaceUser</code> + <code>FaceImage</code></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-table me-2"></i>2.2. Chi tiết từng bảng</h5>
+            
+            <!-- Bảng User -->
+            <div class="step-card">
+                <h6><i class="fas fa-user me-2 text-primary"></i>Bảng 1: User (Người dùng)</h6>
+                <p class="mb-2"><strong>Mục đích:</strong> Lưu tài khoản đăng nhập (Django có sẵn, không cần tạo)</p>
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr><th>Cột</th><th>Kiểu</th><th>Ý nghĩa</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>id</code></td><td>Số</td><td>Mã định danh (tự tăng)</td></tr>
+                        <tr><td><code>username</code></td><td>Text</td><td>Tên đăng nhập</td></tr>
+                        <tr><td><code>password</code></td><td>Text</td><td>Mật khẩu (đã mã hóa)</td></tr>
+                        <tr><td><code>email</code></td><td>Text</td><td>Email</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Bảng Profile -->
+            <div class="step-card">
+                <h6><i class="fas fa-id-card me-2 text-info"></i>Bảng 2: Profile (Hồ sơ mở rộng)</h6>
+                <p class="mb-2"><strong>Mục đích:</strong> Bổ sung thông tin User + chứa <code>API Key</code> để ESP32 kết nối</p>
+                <p class="mb-2"><strong>Tại sao tách riêng?</strong> Django không cho sửa bảng User, nên ta tạo bảng Profile liên kết 1-1</p>
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr><th>Cột</th><th>Kiểu</th><th>Ý nghĩa</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>user_id</code></td><td>FK → User</td><td>Liên kết đến User</td></tr>
+                        <tr><td><code>phone</code></td><td>Text</td><td>Số điện thoại</td></tr>
+                        <tr><td><code>address</code></td><td>Text</td><td>Địa chỉ</td></tr>
+                        <tr><td><code>api_key</code></td><td>Text (64 ký tự)</td><td>🔑 Khóa để ESP32 gửi/nhận MQTT</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Bảng Device -->
+            <div class="step-card">
+                <h6><i class="fas fa-plug me-2 text-warning"></i>Bảng 3: Device (Thiết bị)</h6>
+                <p class="mb-2"><strong>Mục đích:</strong> Lưu danh sách thiết bị của mỗi người dùng</p>
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr><th>Cột</th><th>Kiểu</th><th>Ý nghĩa</th><th>Ví dụ</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>user_id</code></td><td>FK → User</td><td>Thiết bị của ai?</td><td>1 (admin)</td></tr>
+                        <tr><td><code>device_code</code></td><td>Text</td><td>Mã để ESP32 nhận diện</td><td>"v1", "v2"</td></tr>
+                        <tr><td><code>name</code></td><td>Text</td><td>Tên hiển thị</td><td>"Đèn phòng khách"</td></tr>
+                        <tr><td><code>device_type</code></td><td>Text</td><td>relay hoặc sensor</td><td>"relay"</td></tr>
+                        <tr><td><code>value</code></td><td>Text</td><td>Giá trị hiện tại</td><td>"1" (đang bật)</td></tr>
+                    </tbody>
+                </table>
+                <div class="info-box mt-3 mb-0">
+                    <strong>Giải thích <code>device_code</code>:</strong> Khi web gửi lệnh "bật v1", ESP32 sẽ hiểu là bật relay số 1.
+                </div>
+            </div>
+            
+            <!-- Bảng SensorLog -->
+            <div class="step-card">
+                <h6><i class="fas fa-chart-line me-2 text-success"></i>Bảng 4: SensorLog (Lịch sử cảm biến)</h6>
+                <p class="mb-2"><strong>Mục đích:</strong> Ghi lại giá trị cảm biến theo thời gian để vẽ đồ thị</p>
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr><th>Cột</th><th>Kiểu</th><th>Ý nghĩa</th><th>Ví dụ</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>device_id</code></td><td>FK → Device</td><td>Của cảm biến nào?</td><td>5</td></tr>
+                        <tr><td><code>value</code></td><td>Số thực</td><td>Giá trị đo được</td><td>28.5</td></tr>
+                        <tr><td><code>timestamp</code></td><td>DateTime</td><td>Thời điểm ghi</td><td>2026-01-03 10:30:00</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Bảng FaceUser -->
+            <div class="step-card">
+                <h6><i class="fas fa-user-check me-2 text-danger"></i>Bảng 5: FaceUser (Người được mở cửa)</h6>
+                <p class="mb-2"><strong>Mục đích:</strong> Lưu danh sách người có thể mở cửa bằng khuôn mặt</p>
+                <p class="mb-2"><strong>Tại sao không dùng User?</strong> Vì chủ nhà (1 User) có thể thêm nhiều người: vợ, con...</p>
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr><th>Cột</th><th>Kiểu</th><th>Ý nghĩa</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>owner_id</code></td><td>FK → User</td><td>Ai quản lý người này?</td></tr>
+                        <tr><td><code>user_code</code></td><td>Text</td><td>Mã định danh (VD: "NV001")</td></tr>
+                        <tr><td><code>name</code></td><td>Text</td><td>Họ tên</td></tr>
+                        <tr><td><code>is_active</code></td><td>Boolean</td><td>Còn được phép mở cửa?</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-link me-2"></i>2.3. Mối quan hệ giữa các bảng</h5>
+            
+            <div class="info-box">
+                <strong>Quy tắc đơn giản:</strong>
+                <ul class="mb-0 mt-2">
+                    <li><strong>1 — 1</strong>: Một User có đúng một Profile</li>
+                    <li><strong>1 — n</strong>: Một User có nhiều Device, nhưng mỗi Device chỉ thuộc 1 User</li>
+                </ul>
+            </div>
+            
+            <div class="file-structure">
+<span class="folder">📁 User</span> (Tài khoản đăng nhập)
+│
+├── <span class="file">1:1</span> ─── <span class="folder">Profile</span> (Thông tin + API Key)
+│
+├── <span class="file">1:n</span> ─── <span class="folder">Device</span> (Danh sách thiết bị)
+│               └── <span class="file">1:n</span> ─── <span class="folder">SensorLog</span> (Lịch sử)
+│
+└── <span class="file">1:n</span> ─── <span class="folder">FaceUser</span> (Người được mở cửa)
+                ├── <span class="file">1:n</span> ─── <span class="folder">FaceImage</span> (Ảnh khuôn mặt)
+                └── <span class="file">1:n</span> ─── <span class="folder">AttendanceLog</span> (Lịch sử mở cửa)
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-code me-2"></i>2.4. Viết code Model trong Django</h5>
+            
+            <p>Trong Django, mỗi bảng = 1 class Python. Django tự động tạo bảng SQL từ class:</p>
+            
+            <div class="code-block"><span class="comment"># File: devices/models.py</span>
+
+<span class="keyword">from</span> django.db <span class="keyword">import</span> models
+<span class="keyword">from</span> django.contrib.auth.models <span class="keyword">import</span> User
+
+<span class="keyword">class</span> <span class="class">Device</span>(models.Model):
+    <span class="comment"># Liên kết đến User (1 User có nhiều Device)</span>
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE,  <span class="comment"># Xóa User → xóa luôn Device</span>
+        related_name=<span class="string">'devices'</span>      <span class="comment"># user.devices.all() để lấy danh sách</span>
+    )
+    
+    <span class="comment"># Các trường dữ liệu</span>
+    device_code = models.CharField(max_length=10)   <span class="comment"># "v1", "v2"...</span>
+    name = models.CharField(max_length=100)         <span class="comment"># "Đèn phòng khách"</span>
+    device_type = models.CharField(max_length=20)   <span class="comment"># "relay" hoặc "sensor"</span>
+    value = models.CharField(default=<span class="string">'0'</span>)           <span class="comment"># "0"=tắt, "1"=bật</span>
+    
+    <span class="comment"># Ràng buộc: mỗi user không được trùng device_code</span>
+    <span class="keyword">class</span> <span class="class">Meta</span>:
+        unique_together = [<span class="string">'user'</span>, <span class="string">'device_code'</span>]</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-terminal me-2"></i>2.5. Chạy lệnh tạo Database</h5>
+            
+            <p>Sau khi viết xong các file <code>models.py</code>, chạy các lệnh sau để Django tạo database:</p>
+            
+            <div class="step-card">
+                <h6>Bước 1: Tạo file migration (bản thiết kế)</h6>
+                <div class="code-block">python manage.py makemigrations</div>
+                <p class="mb-0 mt-2"><small>Lệnh này đọc tất cả models.py và tạo file "migration" mô tả cần tạo bảng gì.</small></p>
+            </div>
+            
+            <div class="step-card">
+                <h6>Bước 2: Áp dụng vào database (tạo bảng thật)</h6>
+                <div class="code-block">python manage.py migrate</div>
+                <p class="mb-0 mt-2"><small>Lệnh này đọc file migration và thực sự tạo các bảng trong database (file db.sqlite3).</small></p>
+            </div>
+            
+            <div class="step-card">
+                <h6>Bước 3: Tạo tài khoản admin (lần đầu)</h6>
+                <div class="code-block">python manage.py createsuperuser</div>
+                <p class="mb-0 mt-2"><small>Tạo tài khoản admin để đăng nhập vào /admin/ quản lý dữ liệu.</small></p>
+            </div>
+            
+            <div class="warning-box">
+                <strong><i class="fas fa-exclamation-triangle me-2"></i>Lưu ý quan trọng:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>Mỗi lần <strong>sửa models.py</strong> (thêm/xóa/sửa trường) → phải chạy lại <code>makemigrations</code> + <code>migrate</code></li>
+                    <li>File <code>db.sqlite3</code> chứa toàn bộ dữ liệu. Xóa file này = mất hết!</li>
+                    <li>Khi deploy lên server, thường dùng PostgreSQL thay vì SQLite</li>
+                </ul>
+            </div>
+
+            <div class="success-box">
+                <strong><i class="fas fa-check-circle me-2"></i>Kết luận Phần 2:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>✅ Hiểu database là "cuốn sổ ghi nhớ" của hệ thống</li>
+                    <li>✅ Biết cách tư duy: yêu cầu → bảng → cột</li>
+                    <li>✅ Hiểu mối quan hệ 1-1, 1-n giữa các bảng</li>
+                    <li>✅ Biết viết Django Model và chạy lệnh tạo database</li>
+                </ul>
+                <br>
+                <strong>Bước tiếp theo:</strong> Xây dựng Backend (Views, URLs) để xử lý request.
+            </div>
+        </div>
+        
+        <!-- PHẦN 3: XÂY DỰNG BACKEND -->
+        <div class="guide-section" id="part3">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number me-3">3</div>
+                <h4 class="mb-0">Xây dựng Backend (Views, URLs)</h4>
+            </div>
+
+            <div class="question-box">
+                <strong><i class="fas fa-question-circle me-2"></i>Backend là gì?</strong><br><br>
+                Backend giống như <strong>bộ não</strong> của hệ thống:
+                <ul class="mb-0 mt-2">
+                    <li>🧠 Nhận yêu cầu từ trình duyệt (User click nút)</li>
+                    <li>🧠 Xử lý logic (đọc/ghi database, gửi lệnh MQTT)</li>
+                    <li>🧠 Trả về kết quả (HTML, JSON, redirect...)</li>
+                </ul>
+                <br>
+                <em>Không có backend → Web chỉ là trang tĩnh, không tương tác được!</em>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-road me-2"></i>3.1. Hiểu về URL và View</h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-link me-2 text-primary"></i>URL là gì?</h6>
+                        <p class="mb-2">URL = địa chỉ trang web</p>
+                        <ul class="mb-0">
+                            <li><code>/dashboard/</code> → Trang dashboard</li>
+                            <li><code>/devices/</code> → Danh sách thiết bị</li>
+                            <li><code>/api/toggle/v1/</code> → Bật/tắt thiết bị v1</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-cog me-2 text-success"></i>View là gì?</h6>
+                        <p class="mb-2">View = hàm Python xử lý URL đó</p>
+                        <ul class="mb-0">
+                            <li>Nhận request từ user</li>
+                            <li>Xử lý logic nghiệp vụ</li>
+                            <li>Trả về response (HTML/JSON)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-diagram mt-4">
+                <div class="flow-box">
+                    <i class="fas fa-user fa-2x text-primary mb-2"></i><br>
+                    <small>User truy cập<br><code>/devices/</code></small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-route fa-2x text-warning mb-2"></i><br>
+                    <small>urls.py<br>tìm View</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-cog fa-2x text-success mb-2"></i><br>
+                    <small>views.py<br>xử lý logic</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-database fa-2x text-info mb-2"></i><br>
+                    <small>Đọc/ghi<br>Database</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-file-code fa-2x text-danger mb-2"></i><br>
+                    <small>Trả về<br>HTML/JSON</small>
+                </div>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-clipboard-list me-2"></i>3.2. Xác định các chức năng cần làm</h5>
+            
+            <p>Từ yêu cầu hệ thống, liệt kê các <strong>hành động</strong> user có thể làm:</p>
+            
+            <table class="table table-bordered model-table">
+                <thead>
+                    <tr>
+                        <th>Chức năng</th>
+                        <th>URL</th>
+                        <th>View cần tạo</th>
+                        <th>Trả về</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Xem dashboard</td>
+                        <td><code>/smart-home/</code></td>
+                        <td><code>smart_home_page()</code></td>
+                        <td>HTML trang dashboard</td>
+                    </tr>
+                    <tr>
+                        <td>Xem danh sách thiết bị</td>
+                        <td><code>/devices/</code></td>
+                        <td><code>device_list()</code></td>
+                        <td>HTML danh sách</td>
+                    </tr>
+                    <tr>
+                        <td>Thêm thiết bị mới</td>
+                        <td><code>/devices/add/</code></td>
+                        <td><code>device_add()</code></td>
+                        <td>Form + redirect</td>
+                    </tr>
+                    <tr>
+                        <td>Bật/tắt thiết bị</td>
+                        <td><code>/api/device/toggle/</code></td>
+                        <td><code>api_toggle_device()</code></td>
+                        <td>JSON {status: ok}</td>
+                    </tr>
+                    <tr>
+                        <td>Lấy dữ liệu cảm biến</td>
+                        <td><code>/api/sensor/&lt;id&gt;/</code></td>
+                        <td><code>api_sensor_data()</code></td>
+                        <td>JSON data cho chart</td>
+                    </tr>
+                    <tr>
+                        <td>Nhận diện khuôn mặt</td>
+                        <td><code>/face/recognize/</code></td>
+                        <td><code>recognize_face()</code></td>
+                        <td>JSON {name, confidence}</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="info-box">
+                <strong>Quy tắc đặt tên:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>URL bắt đầu <code>/api/</code> → trả về JSON (cho JavaScript gọi)</li>
+                    <li>URL thường → trả về HTML (trang web)</li>
+                    <li>Tên view nên mô tả rõ chức năng: <code>device_list</code>, <code>device_add</code>, <code>device_delete</code></li>
+                </ul>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-code me-2"></i>3.3. Viết code URLs (urls.py)</h5>
+            
+            <p>File <code>urls.py</code> là "bản đồ" kết nối URL với View:</p>
+            
+            <div class="code-block"><span class="comment"># File: devices/urls.py</span>
+
+<span class="keyword">from</span> django.urls <span class="keyword">import</span> path
+<span class="keyword">from</span> . <span class="keyword">import</span> views
+
+urlpatterns = [
+    <span class="comment"># Trang HTML</span>
+    path(<span class="string">'devices/'</span>, views.device_list, name=<span class="string">'device_list'</span>),
+    path(<span class="string">'devices/add/'</span>, views.device_add, name=<span class="string">'device_add'</span>),
+    path(<span class="string">'devices/&lt;int:pk&gt;/edit/'</span>, views.device_edit, name=<span class="string">'device_edit'</span>),
+    path(<span class="string">'devices/&lt;int:pk&gt;/delete/'</span>, views.device_delete, name=<span class="string">'device_delete'</span>),
+    
+    <span class="comment"># API trả về JSON</span>
+    path(<span class="string">'api/device/toggle/'</span>, views.api_toggle_device, name=<span class="string">'api_toggle'</span>),
+    path(<span class="string">'api/sensor/&lt;int:device_id&gt;/data/'</span>, views.api_sensor_data, name=<span class="string">'api_sensor'</span>),
+]</div>
+
+            <div class="warning-box">
+                <strong>Giải thích cú pháp:</strong>
+                <ul class="mb-0 mt-2">
+                    <li><code>&lt;int:pk&gt;</code> = tham số động, VD: <code>/devices/5/edit/</code> → pk=5</li>
+                    <li><code>name='device_list'</code> = đặt tên để dùng trong template: <code>{% templatetag openblock %} url 'device_list' {% templatetag closeblock %}</code></li>
+                </ul>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-cogs me-2"></i>3.4. Viết code Views (views.py)</h5>
+            
+            <p>Mỗi View là 1 hàm nhận <code>request</code> và trả về <code>response</code>:</p>
+            
+            <h6 class="mt-4"><i class="fas fa-file-alt me-2"></i>View trả về HTML (trang web)</h6>
+            <div class="code-block"><span class="comment"># File: devices/views.py</span>
+
+<span class="keyword">from</span> django.shortcuts <span class="keyword">import</span> render, redirect, get_object_or_404
+<span class="keyword">from</span> django.contrib.auth.decorators <span class="keyword">import</span> login_required
+<span class="keyword">from</span> .models <span class="keyword">import</span> Device
+
+<span class="decorator">@login_required</span>  <span class="comment"># Bắt buộc đăng nhập mới vào được</span>
+<span class="keyword">def</span> <span class="function">device_list</span>(request):
+    <span class="string">"""Hiển thị danh sách thiết bị của user đang đăng nhập"""</span>
+    
+    <span class="comment"># Bước 1: Lấy dữ liệu từ database</span>
+    devices = Device.objects.filter(user=request.user)
+    
+    <span class="comment"># Bước 2: Truyền dữ liệu vào template HTML</span>
+    context = {
+        <span class="string">'devices'</span>: devices,
+        <span class="string">'total'</span>: devices.count(),
+    }
+    
+    <span class="comment"># Bước 3: Render và trả về HTML</span>
+    <span class="keyword">return</span> render(request, <span class="string">'devices/device_list.html'</span>, context)</div>
+
+            <h6 class="mt-4"><i class="fas fa-plus me-2"></i>View xử lý Form (thêm/sửa)</h6>
+            <div class="code-block"><span class="decorator">@login_required</span>
+<span class="keyword">def</span> <span class="function">device_add</span>(request):
+    <span class="string">"""Thêm thiết bị mới"""</span>
+    
+    <span class="keyword">if</span> request.method == <span class="string">'POST'</span>:
+        <span class="comment"># User đã submit form → lấy dữ liệu và lưu</span>
+        name = request.POST.get(<span class="string">'name'</span>)
+        device_code = request.POST.get(<span class="string">'device_code'</span>)
+        device_type = request.POST.get(<span class="string">'device_type'</span>)
+        
+        <span class="comment"># Tạo mới trong database</span>
+        Device.objects.create(
+            user=request.user,
+            name=name,
+            device_code=device_code,
+            device_type=device_type
+        )
+        
+        <span class="comment"># Redirect về trang danh sách</span>
+        <span class="keyword">return</span> redirect(<span class="string">'device_list'</span>)
+    
+    <span class="comment"># GET request → hiển thị form trống</span>
+    <span class="keyword">return</span> render(request, <span class="string">'devices/device_add.html'</span>)</div>
+
+            <h6 class="mt-4"><i class="fas fa-code me-2"></i>View API trả về JSON</h6>
+            <div class="code-block"><span class="keyword">from</span> django.http <span class="keyword">import</span> JsonResponse
+<span class="keyword">from</span> django.views.decorators.http <span class="keyword">import</span> require_POST
+
+<span class="decorator">@login_required</span>
+<span class="decorator">@require_POST</span>  <span class="comment"># Chỉ chấp nhận POST request</span>
+<span class="keyword">def</span> <span class="function">api_toggle_device</span>(request):
+    <span class="string">"""API bật/tắt thiết bị - gọi từ JavaScript"""</span>
+    
+    <span class="comment"># Bước 1: Lấy dữ liệu từ request</span>
+    device_code = request.POST.get(<span class="string">'device_code'</span>)
+    action = request.POST.get(<span class="string">'action'</span>)  <span class="comment"># 'on' hoặc 'off'</span>
+    
+    <span class="comment"># Bước 2: Tìm thiết bị trong database</span>
+    <span class="keyword">try</span>:
+        device = Device.objects.get(
+            user=request.user, 
+            device_code=device_code
+        )
+    <span class="keyword">except</span> Device.DoesNotExist:
+        <span class="keyword">return</span> JsonResponse({<span class="string">'error'</span>: <span class="string">'Device not found'</span>}, status=404)
+    
+    <span class="comment"># Bước 3: Cập nhật giá trị</span>
+    device.value = <span class="string">'1'</span> <span class="keyword">if</span> action == <span class="string">'on'</span> <span class="keyword">else</span> <span class="string">'0'</span>
+    device.save()
+    
+    <span class="comment"># Bước 4: Gửi lệnh qua MQTT đến ESP32</span>
+    send_mqtt_command(request.user, device_code, action)
+    
+    <span class="comment"># Bước 5: Trả về JSON</span>
+    <span class="keyword">return</span> JsonResponse({
+        <span class="string">'status'</span>: <span class="string">'ok'</span>,
+        <span class="string">'device'</span>: device_code,
+        <span class="string">'value'</span>: device.value
+    })</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-exchange-alt me-2"></i>3.5. Cách Frontend gọi Backend</h5>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-file-alt me-2 text-primary"></i>Cách 1: Link/Form (tải lại trang)</h6>
+                        <div class="code-block" style="font-size:0.8rem;">&lt;!-- Link đến trang khác --&gt;
+&lt;a href="{% templatetag openblock %} url 'device_list' {% templatetag closeblock %}"&gt;
+    Xem thiết bị
+&lt;/a&gt;
+
+&lt;!-- Form submit --&gt;
+&lt;form method="POST" action="{% templatetag openblock %} url 'device_add' {% templatetag closeblock %}"&gt;
+    {% templatetag openblock %} csrf_token {% templatetag closeblock %}
+    &lt;input name="name" /&gt;
+    &lt;button type="submit"&gt;Thêm&lt;/button&gt;
+&lt;/form&gt;</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-bolt me-2 text-warning"></i>Cách 2: AJAX/Fetch (không tải lại)</h6>
+                        <div class="code-block" style="font-size:0.8rem;"><span class="comment">// JavaScript gọi API</span>
+fetch(<span class="string">'/api/device/toggle/'</span>, {
+    method: <span class="string">'POST'</span>,
+    headers: {
+        <span class="string">'X-CSRFToken'</span>: csrfToken
+    },
+    body: new FormData(form)
+})
+.then(res => res.json())
+.then(data => {
+    <span class="comment">// Cập nhật UI không tải lại trang</span>
+    updateDeviceStatus(data);
+});</div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-project-diagram me-2"></i>3.6. Tổng quan luồng xử lý</h5>
+            
+            <div class="file-structure">
+<span class="folder">📂 Luồng xử lý khi User bật đèn</span>
+
+1️⃣ User click nút "Bật đèn v1" trên Dashboard
+   │
+2️⃣ JavaScript gửi POST request đến <span class="file">/api/device/toggle/</span>
+   │  Body: {device_code: "v1", action: "on"}
+   │
+3️⃣ Django nhận request, tìm trong <span class="file">urls.py</span>
+   │  → Match với <span class="folder">api_toggle_device</span> view
+   │
+4️⃣ View <span class="folder">api_toggle_device()</span> chạy:
+   │  ├── Kiểm tra user đã đăng nhập
+   │  ├── Tìm device "v1" trong Database
+   │  ├── Cập nhật value = "1" (bật)
+   │  ├── Gọi <span class="file">send_mqtt_command()</span> → MQTT Broker
+   │  └── Trả về JSON {status: "ok"}
+   │
+5️⃣ MQTT Broker gửi message đến ESP32
+   │  Topic: user_api_key/v1
+   │  Payload: "on"
+   │
+6️⃣ ESP32 nhận lệnh → Bật Relay → Đèn sáng ✅
+   │
+7️⃣ JavaScript nhận JSON response
+   └── Cập nhật icon đèn thành "đang bật" trên UI
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-folder-open me-2"></i>3.7. Cấu trúc file Backend</h5>
+            
+            <div class="file-structure">
+<span class="folder">smart_home/</span>
+├── <span class="folder">core/</span>                 <span class="comment"># Project config</span>
+│   ├── <span class="file">settings.py</span>       <span class="comment"># Cấu hình Django</span>
+│   ├── <span class="file">urls.py</span>           <span class="comment"># URL gốc, include các app</span>
+│   └── <span class="file">asgi.py</span>           <span class="comment"># WebSocket config</span>
+│
+├── <span class="folder">devices/</span>              <span class="comment"># App quản lý thiết bị</span>
+│   ├── <span class="file">models.py</span>         <span class="comment"># Device, SensorLog</span>
+│   ├── <span class="file">views.py</span>          <span class="comment"># Các hàm xử lý</span>
+│   ├── <span class="file">urls.py</span>           <span class="comment"># URL của app này</span>
+│   └── <span class="folder">templates/</span>        <span class="comment"># File HTML</span>
+│
+├── <span class="folder">face_recognition/</span>     <span class="comment"># App nhận diện</span>
+│   ├── <span class="file">models.py</span>         <span class="comment"># FaceUser, FaceImage</span>
+│   ├── <span class="file">views.py</span>          <span class="comment"># API nhận diện</span>
+│   └── <span class="file">face_utils.py</span>     <span class="comment"># Logic AI</span>
+│
+└── <span class="folder">mqtt/</span>                 <span class="comment"># App giao tiếp MQTT</span>
+    ├── <span class="file">mqtt_client.py</span>    <span class="comment"># Kết nối MQTT Broker</span>
+    └── <span class="file">scheduler.py</span>      <span class="comment"># Gửi/nhận message</span>
+            </div>
+
+            <div class="success-box">
+                <strong><i class="fas fa-check-circle me-2"></i>Kết luận Phần 3:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>✅ Hiểu URL là địa chỉ, View là hàm xử lý</li>
+                    <li>✅ Biết cách xác định các chức năng cần làm</li>
+                    <li>✅ Viết được urls.py mapping URL → View</li>
+                    <li>✅ Viết được View trả về HTML và JSON</li>
+                    <li>✅ Hiểu luồng từ Frontend → Backend → Database → MQTT</li>
+                </ul>
+                <br>
+                <strong>Bước tiếp theo:</strong> Giao tiếp MQTT với ESP32 - Gửi/nhận lệnh với phần cứng.
+            </div>
+        </div>
+        
+        <!-- PHẦN 4: GIAO TIẾP MQTT -->
+        <div class="guide-section" id="part4">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number me-3">4</div>
+                <h4 class="mb-0">Giao tiếp MQTT với ESP32</h4>
+            </div>
+
+            <div class="question-box">
+                <strong><i class="fas fa-question-circle me-2"></i>MQTT là gì? Tại sao không dùng HTTP?</strong><br><br>
+                MQTT (Message Queuing Telemetry Transport) là giao thức nhắn tin nhẹ, thiết kế cho IoT:
+                <ul class="mb-0 mt-2">
+                    <li>📦 <strong>Nhẹ</strong>: Header chỉ 2 bytes (HTTP: hàng trăm bytes)</li>
+                    <li>⚡ <strong>Realtime</strong>: ESP32 nhận lệnh ngay lập tức (HTTP phải poll liên tục)</li>
+                    <li>🔌 <strong>Tiết kiệm pin</strong>: Giữ kết nối mở, không cần handshake mỗi lần</li>
+                    <li>📡 <strong>Pub/Sub</strong>: Nhiều thiết bị nhận cùng 1 message</li>
+                </ul>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-network-wired me-2"></i>4.1. Mô hình Publish/Subscribe</h5>
+            
+            <p>MQTT hoạt động theo mô hình <strong>Pub/Sub</strong> (Xuất bản/Đăng ký):</p>
+            
+            <div class="architecture-diagram">
+                <div class="row justify-content-center align-items-center">
+                    <div class="col-md-3">
+                        <div class="arch-box">
+                            <i class="fas fa-server fa-2x mb-2"></i>
+                            <div><strong>Django</strong></div>
+                            <small>Publisher</small>
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <i class="fas fa-arrow-right fa-2x"></i>
+                        <div><small>Publish</small></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="arch-box" style="background:rgba(255,255,255,0.4);">
+                            <i class="fas fa-broadcast-tower fa-2x mb-2"></i>
+                            <div><strong>MQTT Broker</strong></div>
+                            <small>Trung gian</small>
+                        </div>
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <i class="fas fa-arrow-right fa-2x"></i>
+                        <div><small>Forward</small></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="arch-box">
+                            <i class="fas fa-microchip fa-2x mb-2"></i>
+                            <div><strong>ESP32</strong></div>
+                            <small>Subscriber</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-upload me-2 text-primary"></i>Publisher</h6>
+                        <p class="mb-0">Gửi message đến 1 topic</p>
+                        <small class="text-muted">VD: Django gửi "on" đến topic "user123/v1"</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-broadcast-tower me-2 text-warning"></i>Broker</h6>
+                        <p class="mb-0">Nhận message và chuyển tiếp</p>
+                        <small class="text-muted">VD: Mosquitto server tại 103.252.136.205</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="step-card h-100">
+                        <h6><i class="fas fa-download me-2 text-success"></i>Subscriber</h6>
+                        <p class="mb-0">Đăng ký nhận message từ topic</p>
+                        <small class="text-muted">VD: ESP32 subscribe topic "user123/v1"</small>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-tag me-2"></i>4.2. Thiết kế Topic</h5>
+            
+            <p><strong>Topic</strong> giống như "địa chỉ" của message. Cần thiết kế rõ ràng:</p>
+            
+            <div class="code-block"><span class="comment"># Cấu trúc Topic của hệ thống</span>
+
+<span class="comment"># Topic điều khiển thiết bị (Django → ESP32)</span>
+{api_key}/{device_code}
+VD: abc123xyz/v1          <span class="comment"># Điều khiển relay v1 của user có api_key "abc123xyz"</span>
+VD: abc123xyz/v2          <span class="comment"># Điều khiển relay v2</span>
+
+<span class="comment"># Topic cảm biến (ESP32 → Django)</span>
+{api_key}/{device_code}/sensor
+VD: abc123xyz/v5/sensor   <span class="comment"># Gửi dữ liệu nhiệt độ từ cảm biến v5</span>
+
+<span class="comment"># Topic trạng thái (ESP32 → Django)</span>
+{api_key}/status
+VD: abc123xyz/status      <span class="comment"># ESP32 báo online/offline</span></div>
+
+            <div class="info-box">
+                <strong>Tại sao dùng API Key trong topic?</strong>
+                <ul class="mb-0 mt-2">
+                    <li>🔐 Mỗi user có topic riêng, không nhầm lẫn</li>
+                    <li>🏠 User A bật đèn không ảnh hưởng User B</li>
+                    <li>🔑 API Key được tạo random, khó đoán</li>
+                </ul>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-code me-2"></i>4.3. Code MQTT Client (Django)</h5>
+            
+            <p>File <code>mqtt/mqtt_client.py</code> - Kết nối và gửi message:</p>
+            
+            <div class="code-block"><span class="comment"># File: mqtt/mqtt_client.py</span>
+
+<span class="keyword">import</span> paho.mqtt.client <span class="keyword">as</span> mqtt
+<span class="keyword">import</span> json
+<span class="keyword">import</span> threading
+
+<span class="comment"># Cấu hình MQTT Broker</span>
+MQTT_BROKER = <span class="string">"103.252.136.205"</span>
+MQTT_PORT = 1883
+MQTT_USER = <span class="string">"smarthome"</span>
+MQTT_PASS = <span class="string">"password123"</span>
+
+<span class="comment"># Biến global lưu client</span>
+mqtt_client = <span class="keyword">None</span>
+
+<span class="keyword">def</span> <span class="function">on_connect</span>(client, userdata, flags, rc):
+    <span class="string">"""Callback khi kết nối thành công"""</span>
+    <span class="keyword">if</span> rc == 0:
+        print(<span class="string">"✅ Connected to MQTT Broker"</span>)
+        <span class="comment"># Subscribe các topic cần lắng nghe</span>
+        client.subscribe(<span class="string">"#"</span>)  <span class="comment"># Nhận tất cả message</span>
+    <span class="keyword">else</span>:
+        print(<span class="string">f"❌ Connection failed: {rc}"</span>)
+
+<span class="keyword">def</span> <span class="function">on_message</span>(client, userdata, msg):
+    <span class="string">"""Callback khi nhận message từ ESP32"""</span>
+    topic = msg.topic
+    payload = msg.payload.decode()
+    print(<span class="string">f"📩 Received: {topic} → {payload}"</span>)
+    
+    <span class="comment"># Xử lý message (VD: lưu sensor data vào DB)</span>
+    <span class="keyword">if</span> <span class="string">"/sensor"</span> <span class="keyword">in</span> topic:
+        process_sensor_data(topic, payload)
+
+<span class="keyword">def</span> <span class="function">init_mqtt</span>():
+    <span class="string">"""Khởi tạo kết nối MQTT"""</span>
+    <span class="keyword">global</span> mqtt_client
+    
+    mqtt_client = mqtt.Client()
+    mqtt_client.username_pw_set(MQTT_USER, MQTT_PASS)
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    
+    <span class="comment"># Kết nối trong thread riêng (không block server)</span>
+    mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    mqtt_client.loop_start()
+
+<span class="keyword">def</span> <span class="function">send_command</span>(api_key, device_code, value):
+    <span class="string">"""Gửi lệnh điều khiển đến ESP32"""</span>
+    topic = <span class="string">f"{api_key}/{device_code}"</span>
+    mqtt_client.publish(topic, value)
+    print(<span class="string">f"📤 Sent: {topic} → {value}"</span>)</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-plug me-2"></i>4.4. Tích hợp vào View</h5>
+            
+            <p>Gọi hàm <code>send_command()</code> khi user bật/tắt thiết bị:</p>
+            
+            <div class="code-block"><span class="comment"># File: devices/views.py</span>
+
+<span class="keyword">from</span> mqtt.mqtt_client <span class="keyword">import</span> send_command
+
+<span class="decorator">@login_required</span>
+<span class="keyword">def</span> <span class="function">api_toggle_device</span>(request):
+    device_code = request.POST.get(<span class="string">'device_code'</span>)
+    action = request.POST.get(<span class="string">'action'</span>)
+    
+    <span class="comment"># Lấy API Key của user</span>
+    api_key = request.user.profile.api_key
+    
+    <span class="comment"># Cập nhật database</span>
+    device = Device.objects.get(user=request.user, device_code=device_code)
+    device.value = <span class="string">'1'</span> <span class="keyword">if</span> action == <span class="string">'on'</span> <span class="keyword">else</span> <span class="string">'0'</span>
+    device.save()
+    
+    <span class="comment"># 🔥 Gửi lệnh qua MQTT đến ESP32</span>
+    send_command(api_key, device_code, action)
+    
+    <span class="keyword">return</span> JsonResponse({<span class="string">'status'</span>: <span class="string">'ok'</span>})</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-microchip me-2"></i>4.5. Code ESP32 (Arduino)</h5>
+            
+            <p>ESP32 subscribe topic và điều khiển relay:</p>
+            
+            <div class="code-block"><span class="comment">// File: ESP32_SmartHome.ino</span>
+
+#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+
+<span class="comment">// Cấu hình WiFi</span>
+<span class="keyword">const char</span>* ssid = <span class="string">"Your_WiFi"</span>;
+<span class="keyword">const char</span>* password = <span class="string">"password"</span>;
+
+<span class="comment">// Cấu hình MQTT</span>
+<span class="keyword">const char</span>* mqtt_server = <span class="string">"103.252.136.205"</span>;
+<span class="keyword">const char</span>* api_key = <span class="string">"abc123xyz"</span>;  <span class="comment">// Lấy từ web</span>
+
+<span class="comment">// Chân GPIO cho relay</span>
+<span class="keyword">int</span> relay_pins[] = {2, 4, 5, 18, 19};  <span class="comment">// v1, v2, v3, v4, v5</span>
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+<span class="keyword">void</span> <span class="function">callback</span>(char* topic, byte* payload, unsigned int length) {
+    <span class="comment">// Nhận message từ server</span>
+    String message = <span class="string">""</span>;
+    <span class="keyword">for</span> (int i = 0; i < length; i++) {
+        message += (char)payload[i];
+    }
+    
+    <span class="comment">// Lấy device_code từ topic (VD: "abc123xyz/v1" → "v1")</span>
+    String topicStr = String(topic);
+    int lastSlash = topicStr.lastIndexOf(<span class="string">'/'</span>);
+    String device_code = topicStr.substring(lastSlash + 1);
+    
+    <span class="comment">// Xác định relay nào</span>
+    <span class="keyword">int</span> relay_index = device_code.substring(1).toInt() - 1;  <span class="comment">// "v1" → 0</span>
+    
+    <span class="comment">// Bật/tắt relay</span>
+    <span class="keyword">if</span> (message == <span class="string">"on"</span>) {
+        digitalWrite(relay_pins[relay_index], HIGH);
+        Serial.println(<span class="string">"✅ Relay "</span> + device_code + <span class="string">" ON"</span>);
+    } <span class="keyword">else</span> {
+        digitalWrite(relay_pins[relay_index], LOW);
+        Serial.println(<span class="string">"❌ Relay "</span> + device_code + <span class="string">" OFF"</span>);
+    }
+}
+
+<span class="keyword">void</span> <span class="function">setup</span>() {
+    Serial.begin(115200);
+    
+    <span class="comment">// Setup relay pins</span>
+    <span class="keyword">for</span> (int i = 0; i < 5; i++) {
+        pinMode(relay_pins[i], OUTPUT);
+        digitalWrite(relay_pins[i], LOW);
+    }
+    
+    <span class="comment">// Kết nối WiFi</span>
+    WiFi.begin(ssid, password);
+    <span class="keyword">while</span> (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(<span class="string">"."</span>);
+    }
+    Serial.println(<span class="string">"WiFi connected!"</span>);
+    
+    <span class="comment">// Kết nối MQTT</span>
+    client.setServer(mqtt_server, 1883);
+    client.setCallback(callback);
+}
+
+<span class="keyword">void</span> <span class="function">reconnect</span>() {
+    <span class="keyword">while</span> (!client.connected()) {
+        <span class="keyword">if</span> (client.connect(<span class="string">"ESP32Client"</span>)) {
+            <span class="comment">// Subscribe các topic của user</span>
+            String topic = String(api_key) + <span class="string">"/+"</span>;  <span class="comment">// abc123xyz/+</span>
+            client.subscribe(topic.c_str());
+            Serial.println(<span class="string">"MQTT connected!"</span>);
+        } <span class="keyword">else</span> {
+            delay(5000);
+        }
+    }
+}
+
+<span class="keyword">void</span> <span class="function">loop</span>() {
+    <span class="keyword">if</span> (!client.connected()) {
+        reconnect();
+    }
+    client.loop();
+}</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-exchange-alt me-2"></i>4.6. Luồng gửi/nhận hoàn chỉnh</h5>
+            
+            <div class="file-structure">
+<span class="folder">📤 Django → ESP32 (Điều khiển)</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. User click "Bật đèn v1"
+2. JavaScript gọi API /api/device/toggle/
+3. View gọi send_command("abc123", "v1", "on")
+4. MQTT Client publish topic "abc123/v1" payload "on"
+5. Broker chuyển tiếp đến ESP32
+6. ESP32 callback nhận → digitalWrite(pin, HIGH)
+7. Đèn sáng ✅
+
+<span class="folder">📥 ESP32 → Django (Cảm biến)</span>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. DHT22 đọc nhiệt độ: 28.5°C
+2. ESP32 publish topic "abc123/v5/sensor" payload "28.5"
+3. Broker chuyển tiếp đến Django
+4. Django on_message callback nhận
+5. Lưu vào SensorLog database
+6. WebSocket push đến browser
+7. Dashboard cập nhật số ✅
+            </div>
+
+            <div class="success-box">
+                <strong><i class="fas fa-check-circle me-2"></i>Kết luận Phần 4:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>✅ Hiểu MQTT là giao thức Pub/Sub nhẹ cho IoT</li>
+                    <li>✅ Biết thiết kế Topic với API Key để phân biệt user</li>
+                    <li>✅ Viết được MQTT Client trong Django (paho-mqtt)</li>
+                    <li>✅ Viết được code ESP32 subscribe và điều khiển relay</li>
+                    <li>✅ Hiểu luồng 2 chiều: Django ↔ Broker ↔ ESP32</li>
+                </ul>
+                <br>
+                <strong>Bước tiếp theo:</strong> Tích hợp Face Recognition - Nhận diện khuôn mặt mở cửa.
+            </div>
+        </div>
+        
+        <!-- PHẦN 5: FACE RECOGNITION -->
+        <div class="guide-section" id="part5">
+            <div class="d-flex align-items-center mb-4">
+                <div class="step-number me-3">5</div>
+                <h4 class="mb-0">Tích hợp Face Recognition (Nhận diện khuôn mặt)</h4>
+            </div>
+
+            <div class="question-box">
+                <strong><i class="fas fa-question-circle me-2"></i>Face Recognition là gì?</strong><br><br>
+                Face Recognition (nhận diện khuôn mặt) là công nghệ AI có khả năng:
+                <ul class="mb-0 mt-2">
+                    <li>🔍 <strong>Phát hiện</strong> (Detection): Tìm vị trí khuôn mặt trong ảnh</li>
+                    <li>📐 <strong>Trích xuất</strong> (Embedding): Chuyển khuôn mặt thành vector số</li>
+                    <li>🎯 <strong>So khớp</strong> (Matching): So sánh 2 vector để xác định cùng 1 người</li>
+                </ul>
+                <br>
+                <em>Ứng dụng: Mở cửa tự động khi nhận diện đúng người đã đăng ký!</em>
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-brain me-2"></i>5.1. Thuật toán hoạt động như thế nào?</h5>
+            
+            <div class="flow-diagram">
+                <div class="flow-box">
+                    <i class="fas fa-camera fa-2x text-primary mb-2"></i><br>
+                    <small>Ảnh đầu vào<br>từ camera</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-search fa-2x text-warning mb-2"></i><br>
+                    <small>Detect<br>tìm mặt</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-vector-square fa-2x text-success mb-2"></i><br>
+                    <small>Embedding<br>512 số</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-balance-scale fa-2x text-info mb-2"></i><br>
+                    <small>So sánh<br>với DB</small>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <i class="fas fa-user-check fa-2x text-danger mb-2"></i><br>
+                    <small>Kết quả<br>"Nguyễn A"</small>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <h6><i class="fas fa-search me-2 text-warning"></i>Bước 1: Face Detection</h6>
+                        <p class="mb-2">Tìm vị trí khuôn mặt trong ảnh (bounding box)</p>
+                        <ul class="mb-0">
+                            <li>Input: Ảnh 640x480 pixel</li>
+                            <li>Output: Tọa độ (x, y, width, height)</li>
+                            <li>Thuật toán: RetinaFace (trong InsightFace)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <h6><i class="fas fa-vector-square me-2 text-success"></i>Bước 2: Face Embedding</h6>
+                        <p class="mb-2">Chuyển khuôn mặt thành vector 512 chiều</p>
+                        <ul class="mb-0">
+                            <li>Input: Ảnh khuôn mặt đã crop 112x112</li>
+                            <li>Output: Vector 512 số thực [-1, 1]</li>
+                            <li>Thuật toán: ArcFace (trong InsightFace)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-box mt-3">
+                <strong>Embedding là gì?</strong><br>
+                Embedding biến khuôn mặt thành "mã số" duy nhất. Hai ảnh cùng 1 người sẽ có embedding <strong>gần nhau</strong>, hai người khác nhau sẽ có embedding <strong>xa nhau</strong>.
+                <br><br>
+                <code>[0.12, -0.34, 0.56, ..., 0.78]</code> ← Vector 512 số đại diện cho 1 khuôn mặt
+            </div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-ruler me-2"></i>5.2. So sánh khuôn mặt (Cosine Similarity)</h5>
+            
+            <p>Để biết 2 khuôn mặt có giống nhau không, ta tính <strong>độ tương đồng cosine</strong>:</p>
+            
+            <div class="code-block"><span class="comment"># Công thức Cosine Similarity</span>
+
+similarity = cos(θ) = (A · B) / (|A| × |B|)
+
+<span class="comment"># Trong đó:</span>
+<span class="comment"># A, B: 2 vector embedding</span>
+<span class="comment"># A · B: tích vô hướng</span>
+<span class="comment"># |A|, |B|: độ dài vector</span>
+
+<span class="comment"># Kết quả:</span>
+<span class="comment"># similarity ≈ 1.0  → Cùng 1 người (giống nhau)</span>
+<span class="comment"># similarity ≈ 0.0  → Khác người (khác nhau)</span>
+<span class="comment"># similarity < 0.4  → Chắc chắn khác người</span>
+
+<span class="comment"># Ngưỡng thường dùng: 0.5 - 0.6</span>
+<span class="keyword">if</span> similarity > 0.5:
+    print(<span class="string">"✅ Cùng 1 người"</span>)
+<span class="keyword">else</span>:
+    print(<span class="string">"❌ Khác người"</span>)</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-graduation-cap me-2"></i>5.3. Quy trình "Train" (Đăng ký khuôn mặt)</h5>
+            
+            <div class="warning-box">
+                <strong>Lưu ý:</strong> Với InsightFace, ta KHÔNG train model từ đầu (rất tốn thời gian). Thay vào đó, ta chỉ <strong>lưu embedding</strong> của người mới vào database.
+            </div>
+            
+            <div class="file-structure">
+<span class="folder">📁 Quy trình đăng ký khuôn mặt mới</span>
+
+1️⃣ <span class="file">Chụp ảnh</span>
+   └── User chụp 5-10 ảnh khuôn mặt từ nhiều góc
+
+2️⃣ <span class="file">Detect & Crop</span>
+   └── Với mỗi ảnh: tìm mặt → crop 112x112
+
+3️⃣ <span class="file">Extract Embedding</span>
+   └── Chạy qua model → lấy vector 512 chiều
+
+4️⃣ <span class="file">Lưu vào Database</span>
+   └── Lưu ảnh vào thư mục media/face_dataset/
+   └── Lưu đường dẫn vào bảng FaceImage
+
+5️⃣ <span class="file">Build Index</span> (tùy chọn)
+   └── Tính trung bình embedding các ảnh
+   └── Lưu vào file .pkl để nhận diện nhanh hơn
+            </div>
+            
+            <div class="code-block"><span class="comment"># File: face_recognition/face_utils.py - Đăng ký khuôn mặt</span>
+
+<span class="keyword">import</span> insightface
+<span class="keyword">import</span> cv2
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> os
+
+<span class="comment"># Load model InsightFace (chỉ load 1 lần)</span>
+face_app = insightface.app.FaceAnalysis(name=<span class="string">'buffalo_l'</span>)
+face_app.prepare(ctx_id=0)  <span class="comment"># GPU=0, CPU=-1</span>
+
+<span class="keyword">def</span> <span class="function">register_face</span>(user_code, name, image_paths):
+    <span class="string">"""
+    Đăng ký khuôn mặt mới
+    - user_code: Mã định danh (VD: "NV001")
+    - name: Tên người (VD: "Nguyễn Văn A")
+    - image_paths: Danh sách đường dẫn ảnh
+    """</span>
+    
+    embeddings = []
+    
+    <span class="keyword">for</span> img_path <span class="keyword">in</span> image_paths:
+        <span class="comment"># Đọc ảnh</span>
+        img = cv2.imread(img_path)
+        
+        <span class="comment"># Detect khuôn mặt</span>
+        faces = face_app.get(img)
+        
+        <span class="keyword">if</span> len(faces) == 0:
+            print(<span class="string">f"⚠️ Không tìm thấy mặt trong {img_path}"</span>)
+            <span class="keyword">continue</span>
+        
+        <span class="comment"># Lấy embedding của mặt đầu tiên</span>
+        embedding = faces[0].embedding  <span class="comment"># Vector 512 số</span>
+        embeddings.append(embedding)
+    
+    <span class="comment"># Tính trung bình embedding</span>
+    <span class="keyword">if</span> embeddings:
+        avg_embedding = np.mean(embeddings, axis=0)
+        
+        <span class="comment"># Lưu vào database hoặc file</span>
+        save_embedding(user_code, name, avg_embedding)
+        print(<span class="string">f"✅ Đã đăng ký {name} với {len(embeddings)} ảnh"</span>)
+    <span class="keyword">else</span>:
+        print(<span class="string">"❌ Không có ảnh hợp lệ"</span>)</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-user-check me-2"></i>5.4. Quy trình nhận diện</h5>
+            
+            <div class="file-structure">
+<span class="folder">📁 Quy trình nhận diện khuôn mặt</span>
+
+1️⃣ <span class="file">Nhận ảnh từ camera</span>
+   └── ESP32-CAM gửi frame qua MJPEG stream
+
+2️⃣ <span class="file">Detect khuôn mặt</span>
+   └── Tìm tất cả khuôn mặt trong frame
+
+3️⃣ <span class="file">Extract Embedding</span>
+   └── Chuyển thành vector 512 chiều
+
+4️⃣ <span class="file">So sánh với Database</span>
+   └── Tính cosine similarity với từng người đã đăng ký
+   └── Tìm người có similarity cao nhất
+
+5️⃣ <span class="file">Kiểm tra ngưỡng</span>
+   └── similarity > 0.5 → Nhận diện thành công
+   └── similarity ≤ 0.5 → Không xác định
+
+6️⃣ <span class="file">Thực hiện hành động</span>
+   └── Gửi MQTT mở cửa
+   └── Lưu log vào AttendanceLog
+            </div>
+            
+            <div class="code-block"><span class="comment"># File: face_recognition/face_utils.py - Nhận diện</span>
+
+<span class="keyword">def</span> <span class="function">recognize_face</span>(image):
+    <span class="string">"""
+    Nhận diện khuôn mặt từ ảnh
+    Returns: (user_code, name, confidence) hoặc None
+    """</span>
+    
+    <span class="comment"># Detect khuôn mặt</span>
+    faces = face_app.get(image)
+    
+    <span class="keyword">if</span> len(faces) == 0:
+        <span class="keyword">return</span> <span class="keyword">None</span>
+    
+    <span class="comment"># Lấy embedding của mặt phát hiện được</span>
+    query_embedding = faces[0].embedding
+    
+    <span class="comment"># Load tất cả embedding đã đăng ký từ database</span>
+    registered_faces = load_all_embeddings()
+    
+    best_match = <span class="keyword">None</span>
+    best_score = 0
+    
+    <span class="keyword">for</span> user_code, name, db_embedding <span class="keyword">in</span> registered_faces:
+        <span class="comment"># Tính cosine similarity</span>
+        score = cosine_similarity(query_embedding, db_embedding)
+        
+        <span class="keyword">if</span> score > best_score:
+            best_score = score
+            best_match = (user_code, name)
+    
+    <span class="comment"># Kiểm tra ngưỡng</span>
+    THRESHOLD = 0.5
+    <span class="keyword">if</span> best_score > THRESHOLD:
+        user_code, name = best_match
+        print(<span class="string">f"✅ Nhận diện: {name} (confidence: {best_score:.2f})"</span>)
+        
+        <span class="comment"># Mở cửa qua MQTT</span>
+        send_door_open_command()
+        
+        <span class="keyword">return</span> (user_code, name, best_score)
+    
+    print(<span class="string">f"❌ Không nhận diện được (best: {best_score:.2f})"</span>)
+    <span class="keyword">return</span> <span class="keyword">None</span>
+
+<span class="keyword">def</span> <span class="function">cosine_similarity</span>(a, b):
+    <span class="string">"""Tính độ tương đồng cosine giữa 2 vector"""</span>
+    <span class="keyword">return</span> np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-user-plus me-2"></i>5.5. Thêm khuôn mặt mới (qua Web)</h5>
+            
+            <p>Giao diện web cho phép user đăng ký người mới:</p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <h6><i class="fas fa-camera me-2 text-primary"></i>Cách 1: Chụp từ Webcam</h6>
+                        <ol class="mb-0">
+                            <li>Mở trang "Thêm người mới"</li>
+                            <li>Nhập mã và tên</li>
+                            <li>Click "Chụp ảnh" 5-10 lần</li>
+                            <li>Preview các ảnh đã chụp</li>
+                            <li>Click "Đăng ký"</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="step-card">
+                        <h6><i class="fas fa-upload me-2 text-success"></i>Cách 2: Upload ảnh</h6>
+                        <ol class="mb-0">
+                            <li>Mở trang "Thêm người mới"</li>
+                            <li>Nhập mã và tên</li>
+                            <li>Chọn nhiều file ảnh</li>
+                            <li>Hệ thống tự detect mặt</li>
+                            <li>Click "Đăng ký"</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="code-block"><span class="comment"># File: face_recognition/views.py - API thêm khuôn mặt</span>
+
+<span class="decorator">@login_required</span>
+<span class="keyword">def</span> <span class="function">add_face_user</span>(request):
+    <span class="keyword">if</span> request.method == <span class="string">'POST'</span>:
+        user_code = request.POST.get(<span class="string">'user_code'</span>)
+        name = request.POST.get(<span class="string">'name'</span>)
+        images = request.FILES.getlist(<span class="string">'images'</span>)
+        
+        <span class="comment"># Tạo FaceUser trong database</span>
+        face_user = FaceUser.objects.create(
+            owner=request.user,
+            user_code=user_code,
+            name=name
+        )
+        
+        <span class="comment"># Lưu từng ảnh</span>
+        image_paths = []
+        <span class="keyword">for</span> img <span class="keyword">in</span> images:
+            <span class="comment"># Lưu file vào media/face_dataset/</span>
+            path = save_uploaded_image(face_user, img)
+            image_paths.append(path)
+            
+            <span class="comment"># Tạo record FaceImage</span>
+            FaceImage.objects.create(
+                face_user=face_user,
+                image_path=path
+            )
+        
+        <span class="comment"># Build embedding (tùy chọn - có thể làm async)</span>
+        register_face(user_code, name, image_paths)
+        
+        <span class="keyword">return</span> redirect(<span class="string">'face_user_list'</span>)
+    
+    <span class="keyword">return</span> render(request, <span class="string">'face_recognition/add_user.html'</span>)</div>
+
+            <h5 class="mt-4 text-primary"><i class="fas fa-folder-open me-2"></i>5.6. Cấu trúc lưu trữ</h5>
+            
+            <div class="file-structure">
+<span class="folder">media/</span>
+└── <span class="folder">face_dataset/</span>
+    ├── <span class="folder">NV001_Nguyen_Van_A/</span>
+    │   ├── <span class="file">001.jpg</span>
+    │   ├── <span class="file">002.jpg</span>
+    │   └── <span class="file">003.jpg</span>
+    │
+    ├── <span class="folder">NV002_Tran_Thi_B/</span>
+    │   ├── <span class="file">001.jpg</span>
+    │   └── <span class="file">002.jpg</span>
+    │
+    └── <span class="file">embeddings.pkl</span>  <span class="comment"># File cache embedding (tùy chọn)</span>
+
+<span class="folder">Database:</span>
+├── <span class="folder">FaceUser</span>
+│   ├── id=1, user_code="NV001", name="Nguyễn Văn A", owner=admin
+│   └── id=2, user_code="NV002", name="Trần Thị B", owner=admin
+│
+└── <span class="folder">FaceImage</span>
+    ├── face_user=1, path="media/face_dataset/NV001_.../001.jpg"
+    ├── face_user=1, path="media/face_dataset/NV001_.../002.jpg"
+    └── face_user=2, path="media/face_dataset/NV002_.../001.jpg"
+            </div>
+
+            <div class="success-box">
+                <strong><i class="fas fa-check-circle me-2"></i>Kết luận Phần 5:</strong>
+                <ul class="mb-0 mt-2">
+                    <li>✅ Hiểu Face Recognition gồm: Detect → Embedding → Matching</li>
+                    <li>✅ Embedding biến khuôn mặt thành vector 512 số</li>
+                    <li>✅ So sánh bằng Cosine Similarity (ngưỡng ~0.5)</li>
+                    <li>✅ Đăng ký = Lưu embedding, không train model mới</li>
+                    <li>✅ Nhận diện = So sánh với database, tìm best match</li>
+                    <li>✅ Biết cách thêm khuôn mặt mới qua web</li>
+                </ul>
+                <br>
+                <strong>Bước tiếp theo:</strong> Frontend & Dashboard - Xây dựng giao diện người dùng.
+            </div>
+        </div>
+        
+    </div>
+</main>
+{% endblock content %}

@@ -10,6 +10,7 @@ from django.urls import path, include  # add this
 urlpatterns = [
     path('admin/', admin.site.urls),  # Django admin route
     path('customers/', include("customers.urls")),  # Django customers route
+    path('face/', include("face_recognition.urls")),  # Face recognition routes
     path("", include("app.urls")),  # UI Kits Html files
     path("", include("authentication.urls")),  # Auth routes - login / register
 ]

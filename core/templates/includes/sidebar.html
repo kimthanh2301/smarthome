@@ -21,105 +21,89 @@
             </div>
             </div>
             <ul class="nav flex-column">
-            <li class="nav-item  {% if 'dashboard' in segment %} active {% endif %}">
-                <a href="/dashboard.html" class="nav-link">
-                <span class="sidebar-icon"><span class="fas fa-chart-pie"></span></span>
+            <li class="nav-item  {% if 'dashboard' == segment or 'smart_home' in segment %} active {% endif %}">
+                <a href="{% url 'smart_home' %}" class="nav-link">
+                <span class="sidebar-icon"><span class="fas fa-tachometer-alt"></span></span>
                 <span>Dashboard</span>
                 </a>
             </li>
-            <li class="nav-item  {% if 'transactions' in segment %} active {% endif %}">
-                <a href="/transactions.html" class="nav-link">
-                    <span class="sidebar-icon"><span class="fas fa-hand-holding-usd"></span></span>
-                    <span>Transactions</span>
-                </a>
+            <li class="nav-item  {% if 'face_users' in segment or 'test_camera' in segment or 'esp32_camera' in segment %} active {% endif %}">
+                <span class="nav-link collapsed d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#submenu-face">
+                <span>
+                    <span class="sidebar-icon"><span class="fas fa-user-circle"></span></span> 
+                    Face ID
+                </span>
+                <span class="link-arrow"><span class="fas fa-chevron-right"></span></span> 
+                </span>
+                <div class="multi-level collapse {% if 'face_users' in segment or 'test_camera' in segment or 'esp32_camera' in segment %}show{% endif %}" role="list" id="submenu-face" aria-expanded="false">
+                    <ul class="flex-column nav">
+                        <li class="nav-item {% if 'face_users' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'face_users_list' %}"><span>Quản lý người dùng</span></a>
+                        </li>
+                        <li class="nav-item {% if 'esp32_camera' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'esp32_camera_dashboard' %}"><span>ESP32 Camera</span></a>
+                        </li>
+                        <li class="nav-item {% if 'test_camera' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'test_camera' %}"><span>Test Webcam</span></a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li class="nav-item  {% if 'profile' in segment %} active {% endif %}">
                 <a href="{% url 'profile' %}" class="nav-link">
-                    <span class="sidebar-icon"><span class="fas fa-cog"></span></span>
-                    <span>Settings</span>
+                    <span class="sidebar-icon"><span class="fas fa-user-cog"></span></span>
+                    <span>Hồ sơ & API Key</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#submenu-app">
+            <li class="nav-item  {% if 'about' in segment or 'database_schema' in segment or 'hardware_flow' in segment or 'face_recognition_flow' in segment %} active {% endif %}">
+                <span class="nav-link collapsed d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#submenu-about">
                 <span>
-                    <span class="sidebar-icon"><span class="fas fa-table"></span></span> 
-                    Tables
+                    <span class="sidebar-icon"><span class="fas fa-info-circle"></span></span> 
+                    Về đồ án
                 </span>
                 <span class="link-arrow"><span class="fas fa-chevron-right"></span></span> 
                 </span>
-                <div class="multi-level collapse " role="list" id="submenu-app" aria-expanded="false">
+                <div class="multi-level collapse {% if 'about' in segment or 'database_schema' in segment or 'hardware_flow' in segment or 'face_recognition_flow' in segment %}show{% endif %}" role="list" id="submenu-about" aria-expanded="false">
                     <ul class="flex-column nav">
-                        <li class="nav-item "><a class="nav-link" href="/bootstrap-tables.html"><span>Bootstrap Tables</span></a></li>
+                        <li class="nav-item {% if 'about' == segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'about' %}"><span>Giới thiệu</span></a>
+                        </li>
+                        <li class="nav-item {% if 'database_schema' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'database_schema' %}"><span>Sơ đồ Database</span></a>
+                        </li>
+                        <li class="nav-item {% if 'hardware_flow' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'hardware_flow' %}"><span>Lưu đồ phần cứng</span></a>
+                        </li>
+                        <li class="nav-item {% if 'face_recognition_flow' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'face_recognition_flow' %}"><span>Lưu đồ nhận diện</span></a>
+                        </li>
                     </ul>
                 </div>
             </li>
-            <li class="nav-item">
-                <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#submenu-pages">
+            <li class="nav-item  {% if 'web_build_guide' in segment or 'esp32_hardware_guide' in segment %} active {% endif %}">
+                <span class="nav-link collapsed d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#submenu-guide">
                 <span>
-                    <span class="sidebar-icon"><span class="far fa-file-alt"></span></span> 
-                    Page examples
+                    <span class="sidebar-icon"><span class="fas fa-book"></span></span> 
+                    Hướng dẫn
                 </span>
                 <span class="link-arrow"><span class="fas fa-chevron-right"></span></span> 
                 </span>
-                <div class="multi-level collapse " role="list" id="submenu-pages" aria-expanded="false">
+                <div class="multi-level collapse {% if 'web_build_guide' in segment or 'esp32_hardware_guide' in segment %}show{% endif %}" role="list" id="submenu-guide" aria-expanded="false">
                     <ul class="flex-column nav">
-                        <li class="nav-item"><a class="nav-link" href="/sign-in.html"><span>Sign In</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="/sign-up.html"><span>Sign Up</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="/forgot-password.html"><span>Forgot password</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="/reset-password.html"><span>Reset password</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="/lock.html"><span>Lock</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="/page-404.html"><span>404 Not Found</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="/page-500.html"><span>500 Server Error</span></a></li>
+                        <li class="nav-item {% if 'web_build_guide' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'web_build_guide' %}"><span>Build hệ thống Web</span></a>
+                        </li>
+                        <li class="nav-item {% if 'esp32_hardware_guide' in segment %}active{% endif %}">
+                            <a class="nav-link" href="{% url 'esp32_hardware_guide' %}"><span>ESP32 & Phần cứng</span></a>
+                        </li>
                     </ul>
                 </div>
             </li>
-            <li class="nav-item">
-                <span class="nav-link  collapsed  d-flex justify-content-between align-items-center" data-toggle="collapse" data-target="#submenu-components">
-                <span>
-                    <span class="sidebar-icon"><span class="fas fa-box-open"></span></span> 
-                    Components
-                </span>
-                <span class="link-arrow"><span class="fas fa-chevron-right"></span></span> 
-                </span>
-                <div class="multi-level collapse " role="list" id="submenu-components" aria-expanded="false">
-                    <ul class="flex-column nav">
-                        <li class="nav-item "><a class="nav-link" href="/ui-buttons.html"><span>Buttons</span></a></li>
-                        <li class="nav-item "><a class="nav-link" href="/ui-notifications.html"><span>Notifications</span></a></li>
-                        <li class="nav-item "><a class="nav-link" href="/ui-forms.html"><span>Forms</span></a></li>
-                        <li class="nav-item "><a class="nav-link" href="/ui-modals.html"><span>Modals</span></a></li>
-                        <li class="nav-item "><a class="nav-link" href="/ui-typography.html"><span>Typography</span></a></li>
-                    </ul>
-                </div>
-            </li>
+            <li role="separator" class="dropdown-divider mt-4 mb-3 border-black"></li>
             <li class="nav-item">
                 <a href="{% url 'logout' %}" class="nav-link">
                     <span class="sidebar-icon"><span class="fas fa-sign-out-alt text-danger"></span></span>
-                    <span>Logout</span>
-                </a>
-            </li>            
-            <li role="separator" class="dropdown-divider mt-4 mb-3 border-black"></li>
-            <li class="nav-item">
-                <a href="/" class="nav-link d-flex align-items-center">
-                <span class="sidebar-icon">
-                    <img src="/static/assets/img/brand/light.svg" height="20" width="20" alt="Volt Logo">
-                </span>
-                <span class="mt-1">Presentation</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a target="_blank" 
-                   href="https://github.com/app-generator/django-user-profile" class="nav-link d-flex align-items-center">
-                <span class="sidebar-icon">
-                    <span class="fas fa-download"></span>
-                </span>
-                <span class="mt-1">Source Code</span>
-                </a>
-            </li>            
-            <li class="nav-item">
-                <a target="_blank"
-                   href="https://themesberg.com/product/django/volt-admin-dashboard-pro" class="nav-link d-flex align-items-center">
-                    <span class="sidebar-icon"><span class="fas fa-rocket text-danger"></span></span>
-                    <span>PRO Version</span>
+                    <span>Đăng xuất</span>
                 </a>
             </li>
             </ul>

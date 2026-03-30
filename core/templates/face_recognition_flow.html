@@ -1,0 +1,1215 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Lưu đồ thuật toán Nhận diện khuôn mặt {% endblock %}
+
+{% block stylesheets %}
+<style>
+    .flow-hero {
+        background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+        color: #f8fafc;
+        padding: 32px;
+        border-radius: 14px;
+        margin-bottom: 28px;
+        box-shadow: 0 10px 30px rgba(124,58,237,0.25);
+    }
+    .flow-hero h1 {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    .flow-pill {
+        display: inline-flex;
+        align-items: center;
+        font-size: 13px;
+        text-transform: uppercase;
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 6px 14px;
+        border-radius: 999px;
+        letter-spacing: 0.1em;
+    }
+    .flow-pill i {
+        margin-right: 6px;
+    }
+    
+    /* Stats Cards */
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(15,23,42,0.08);
+        padding: 20px;
+        background: #fff;
+        height: 100%;
+    }
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .stat-label {
+        text-transform: uppercase;
+        font-size: 11px;
+        color: #64748b;
+        letter-spacing: 0.1em;
+    }
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .section-header h3 {
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+    .section-badge {
+        background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 12px;
+    }
+
+    /* ERD Styles */
+    .erd-container {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #e2e8f0;
+    }
+    .erd-entity {
+        background: #fff;
+        border-radius: 16px;
+        border: 2px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+        transition: all 0.3s ease;
+    }
+    .erd-entity:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(15,23,42,0.12);
+    }
+    .erd-entity-header {
+        padding: 14px 18px;
+        font-weight: 700;
+        color: white;
+        display: flex;
+        align-items: center;
+    }
+    .erd-entity-header i {
+        margin-right: 10px;
+        font-size: 18px;
+    }
+    .erd-entity.user .erd-entity-header { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+    .erd-entity.faceuser .erd-entity-header { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+    .erd-entity.faceimage .erd-entity-header { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
+    .erd-entity.attendance .erd-entity-header { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); }
+    .erd-entity.status .erd-entity-header { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+    
+    .erd-entity-body {
+        padding: 16px 18px;
+    }
+    .erd-field {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed #e2e8f0;
+        font-size: 13px;
+    }
+    .erd-field:last-child {
+        border-bottom: none;
+    }
+    .erd-field-name {
+        font-weight: 600;
+        color: #1e293b;
+        flex: 1;
+    }
+    .erd-field-type {
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        color: #64748b;
+        font-family: monospace;
+    }
+    .erd-key {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        margin-right: 8px;
+        font-size: 10px;
+    }
+    .erd-key.pk { background: #fef3c7; color: #b45309; }
+    .erd-key.fk { background: #dbeafe; color: #1d4ed8; }
+    .erd-key.uk { background: #dcfce7; color: #15803d; }
+
+    /* Relationship Lines */
+    .erd-relations {
+        padding: 20px;
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        margin-top: 24px;
+    }
+    .relation-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background: #f8fafc;
+    }
+    .relation-item:last-child {
+        margin-bottom: 0;
+    }
+    .relation-from, .relation-to {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .relation-from { background: #ede9fe; color: #6d28d9; }
+    .relation-to { background: #dbeafe; color: #1d4ed8; }
+    .relation-type {
+        flex: 1;
+        text-align: center;
+        font-size: 12px;
+        color: #64748b;
+    }
+    .relation-type i {
+        font-size: 20px;
+        color: #94a3b8;
+    }
+
+    /* Flowchart Styles */
+    .flowchart-container {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #e2e8f0;
+    }
+    .flow-node {
+        padding: 16px 24px;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        margin: 10px auto;
+        max-width: 280px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        position: relative;
+    }
+    .flow-node.start-end {
+        background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+        color: white;
+        border-radius: 50px;
+    }
+    .flow-node.process {
+        background: #fff;
+        border: 2px solid #3b82f6;
+        color: #1e40af;
+    }
+    .flow-node.decision {
+        background: #fef3c7;
+        border: 2px solid #f59e0b;
+        color: #92400e;
+        transform: rotate(0deg);
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        padding: 30px;
+        width: 180px;
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .flow-node.io {
+        background: #dcfce7;
+        border: 2px solid #22c55e;
+        color: #166534;
+        transform: skewX(-10deg);
+    }
+    .flow-node.io span {
+        display: block;
+        transform: skewX(10deg);
+    }
+    .flow-node.database {
+        background: #dbeafe;
+        border: 2px solid #3b82f6;
+        color: #1e40af;
+        border-radius: 8px 8px 50% 50%;
+        padding-bottom: 24px;
+    }
+    .flow-node.action {
+        background: #fff;
+        border: 2px solid #f97316;
+        color: #c2410c;
+    }
+    
+    .flow-arrow {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 24px;
+        margin: 8px 0;
+    }
+    .flow-arrow.yes {
+        color: #22c55e;
+    }
+    .flow-arrow.no {
+        color: #ef4444;
+    }
+    .flow-label {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: -8px;
+        margin-bottom: 8px;
+    }
+    .flow-label.yes { color: #22c55e; }
+    .flow-label.no { color: #ef4444; }
+
+    /* Technology Stack */
+    .tech-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 8px 20px rgba(15,23,42,0.06);
+        height: 100%;
+    }
+    .tech-card h5 {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .tech-card h5 i {
+        margin-right: 10px;
+        font-size: 20px;
+    }
+    .tech-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .tech-item:last-child {
+        border-bottom: none;
+    }
+    .tech-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        font-size: 18px;
+    }
+    .tech-name {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .tech-desc {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    /* Algorithm Detail */
+    .algo-step {
+        display: flex;
+        margin-bottom: 20px;
+    }
+    .algo-step-num {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+    .algo-step-content {
+        flex: 1;
+        background: #fff;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+    .algo-step-title {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+    }
+    .algo-step-desc {
+        font-size: 14px;
+        color: #475569;
+    }
+    .code-snippet {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-family: 'Monaco', 'Consolas', monospace;
+        font-size: 12px;
+        margin-top: 10px;
+        overflow-x: auto;
+    }
+    .code-comment { color: #94a3b8; }
+    .code-keyword { color: #c084fc; }
+    .code-string { color: #86efac; }
+    .code-number { color: #fcd34d; }
+    .code-function { color: #67e8f9; }
+
+    /* Parameters */
+    .param-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .param-table th {
+        background: #f1f5f9;
+        padding: 12px 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #475569;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+    .param-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .param-name {
+        font-weight: 600;
+        color: #7c3aed;
+        font-family: monospace;
+    }
+    .param-value {
+        background: #f8fafc;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+    }
+
+    /* Mermaid ERD */
+    .mermaid {
+        text-align: center;
+        background: #fff;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<main class="content">
+    <!-- Hero Section -->
+    <div class="flow-hero">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <span class="flow-pill mb-3">
+                    <i class="fas fa-user-shield"></i> Face Recognition System
+                </span>
+                <h1 class="mb-2">Hệ thống Nhận diện Khuôn mặt</h1>
+                <p class="mb-0 opacity-75">
+                    Sử dụng công nghệ InsightFace với model buffalo_l để nhận diện và điều khiển thiết bị thông minh
+                </p>
+            </div>
+            <div class="text-end">
+                <div class="badge bg-light text-dark px-3 py-2 mb-2">
+                    <i class="fas fa-microchip me-1"></i> InsightFace AI
+                </div>
+                <div class="badge bg-light text-dark px-3 py-2">
+                    <i class="fas fa-database me-1"></i> Django + SQLite
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">buffalo_l</div>
+                        <div class="stat-label">AI Model</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
+                        <i class="fas fa-vector-square"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">512D</div>
+                        <div class="stat-label">Embedding Vector</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">0.5</div>
+                        <div class="stat-label">Threshold</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info me-3">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <div class="stat-value">15s</div>
+                        <div class="stat-label">Interval</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ERD Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="section-header">
+                <h3><i class="fas fa-project-diagram me-2 text-purple"></i>Entity Relationship Diagram</h3>
+                <span class="section-badge">Database Schema</span>
+            </div>
+            
+            <div class="erd-container">
+                <!-- ERD Entities -->
+                <div class="row g-4 mb-4">
+                    <!-- User Entity -->
+                    <div class="col-md-4">
+                        <div class="erd-entity user">
+                            <div class="erd-entity-header">
+                                <i class="fas fa-user"></i>
+                                User (Django Auth)
+                            </div>
+                            <div class="erd-entity-body">
+                                <div class="erd-field">
+                                    <span class="erd-key pk"><i class="fas fa-key"></i></span>
+                                    <span class="erd-field-name">id</span>
+                                    <span class="erd-field-type">INTEGER</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-key uk"><i class="fas fa-fingerprint"></i></span>
+                                    <span class="erd-field-name">username</span>
+                                    <span class="erd-field-type">VARCHAR(150)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">email</span>
+                                    <span class="erd-field-type">VARCHAR(254)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">password</span>
+                                    <span class="erd-field-type">VARCHAR(128)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FaceUser Entity -->
+                    <div class="col-md-4">
+                        <div class="erd-entity faceuser">
+                            <div class="erd-entity-header">
+                                <i class="fas fa-user-circle"></i>
+                                FaceUser
+                            </div>
+                            <div class="erd-entity-body">
+                                <div class="erd-field">
+                                    <span class="erd-key pk"><i class="fas fa-key"></i></span>
+                                    <span class="erd-field-name">id</span>
+                                    <span class="erd-field-type">INTEGER</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-key fk"><i class="fas fa-link"></i></span>
+                                    <span class="erd-field-name">owner_id</span>
+                                    <span class="erd-field-type">INTEGER FK</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-key uk"><i class="fas fa-fingerprint"></i></span>
+                                    <span class="erd-field-name">user_code</span>
+                                    <span class="erd-field-type">VARCHAR(50)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">name</span>
+                                    <span class="erd-field-type">VARCHAR(100)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">is_active</span>
+                                    <span class="erd-field-type">BOOLEAN</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">created_at</span>
+                                    <span class="erd-field-type">DATETIME</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FaceImage Entity -->
+                    <div class="col-md-4">
+                        <div class="erd-entity faceimage">
+                            <div class="erd-entity-header">
+                                <i class="fas fa-image"></i>
+                                FaceImage
+                            </div>
+                            <div class="erd-entity-body">
+                                <div class="erd-field">
+                                    <span class="erd-key pk"><i class="fas fa-key"></i></span>
+                                    <span class="erd-field-name">id</span>
+                                    <span class="erd-field-type">INTEGER</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-key fk"><i class="fas fa-link"></i></span>
+                                    <span class="erd-field-name">face_user_id</span>
+                                    <span class="erd-field-type">INTEGER FK</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">image_path</span>
+                                    <span class="erd-field-type">VARCHAR(500)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">created_at</span>
+                                    <span class="erd-field-type">DATETIME</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- AttendanceLog Entity -->
+                    <div class="col-md-6">
+                        <div class="erd-entity attendance">
+                            <div class="erd-entity-header">
+                                <i class="fas fa-clipboard-list"></i>
+                                AttendanceLog
+                            </div>
+                            <div class="erd-entity-body">
+                                <div class="erd-field">
+                                    <span class="erd-key pk"><i class="fas fa-key"></i></span>
+                                    <span class="erd-field-name">id</span>
+                                    <span class="erd-field-type">INTEGER</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-key fk"><i class="fas fa-link"></i></span>
+                                    <span class="erd-field-name">face_user_id</span>
+                                    <span class="erd-field-type">INTEGER FK</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">event_type</span>
+                                    <span class="erd-field-type">VARCHAR(20)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">confidence</span>
+                                    <span class="erd-field-type">FLOAT</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">timestamp</span>
+                                    <span class="erd-field-type">DATETIME</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FaceRecognitionStatus Entity -->
+                    <div class="col-md-6">
+                        <div class="erd-entity status">
+                            <div class="erd-entity-header">
+                                <i class="fas fa-info-circle"></i>
+                                FaceRecognitionStatus
+                            </div>
+                            <div class="erd-entity-body">
+                                <div class="erd-field">
+                                    <span class="erd-key pk"><i class="fas fa-key"></i></span>
+                                    <span class="erd-field-name">id</span>
+                                    <span class="erd-field-type">INTEGER</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-key fk"><i class="fas fa-link"></i></span>
+                                    <span class="erd-field-name">face_user_id</span>
+                                    <span class="erd-field-type">INTEGER FK (1:1)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">last_event</span>
+                                    <span class="erd-field-type">VARCHAR(20)</span>
+                                </div>
+                                <div class="erd-field">
+                                    <span class="erd-field-name ms-4">last_time</span>
+                                    <span class="erd-field-type">DATETIME</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Relationships -->
+                <div class="erd-relations">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-link me-2"></i>Relationships</h5>
+                    <div class="relation-item">
+                        <span class="relation-from">User</span>
+                        <span class="relation-type">
+                            <i class="fas fa-long-arrow-alt-right"></i>
+                            <div>1 : N</div>
+                        </span>
+                        <span class="relation-to">FaceUser</span>
+                    </div>
+                    <div class="relation-item">
+                        <span class="relation-from">FaceUser</span>
+                        <span class="relation-type">
+                            <i class="fas fa-long-arrow-alt-right"></i>
+                            <div>1 : N</div>
+                        </span>
+                        <span class="relation-to">FaceImage</span>
+                    </div>
+                    <div class="relation-item">
+                        <span class="relation-from">FaceUser</span>
+                        <span class="relation-type">
+                            <i class="fas fa-long-arrow-alt-right"></i>
+                            <div>1 : N</div>
+                        </span>
+                        <span class="relation-to">AttendanceLog</span>
+                    </div>
+                    <div class="relation-item">
+                        <span class="relation-from">FaceUser</span>
+                        <span class="relation-type">
+                            <i class="fas fa-arrows-alt-h"></i>
+                            <div>1 : 1</div>
+                        </span>
+                        <span class="relation-to">FaceRecognitionStatus</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Algorithm Flowchart Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="section-header">
+                <h3><i class="fas fa-sitemap me-2 text-success"></i>Lưu đồ Thuật toán Nhận diện</h3>
+                <span class="section-badge">Algorithm Flowchart</span>
+            </div>
+            
+            <div class="flowchart-container">
+                <div class="row">
+                    <!-- Main Flow -->
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold mb-4 text-center">
+                            <i class="fas fa-play-circle text-primary me-2"></i>
+                            Luồng Nhận diện chính
+                        </h5>
+                        
+                        <div class="flow-node start-end">
+                            <i class="fas fa-play me-2"></i>BẮT ĐẦU
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                        
+                        <div class="flow-node io">
+                            <span><i class="fas fa-camera me-2"></i>Nhận Frame từ Camera</span>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                        
+                        <div class="flow-node process">
+                            <i class="fas fa-search me-2"></i>Phát hiện khuôn mặt<br>
+                            <small>(InsightFace Detector)</small>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                        
+                        <div class="text-center my-4">
+                            <div class="flow-node decision mx-auto">
+                                Có khuôn mặt?
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <div class="flow-label yes">CÓ ✓</div>
+                                <div class="flow-arrow yes"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node process">
+                                    <i class="fas fa-fingerprint me-2"></i>Trích xuất Embedding<br>
+                                    <small>(Vector 512 chiều)</small>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node database">
+                                    <i class="fas fa-database me-2"></i>So sánh với Database<br>
+                                    <small>(Cosine Similarity)</small>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="text-center my-3">
+                                    <div class="flow-node decision mx-auto" style="width: 160px; height: 160px;">
+                                        Similarity > 0.5?
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="flow-label no">KHÔNG ✗</div>
+                                <div class="flow-arrow no"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node io">
+                                    <span><i class="fas fa-redo me-2"></i>Đọc frame tiếp theo</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-6 text-center">
+                                <div class="flow-label yes">CÓ ✓</div>
+                                <div class="flow-arrow yes"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node action">
+                                    <i class="fas fa-user-check me-2"></i>Nhận diện thành công<br>
+                                    <small>Ghi log + Mở cửa</small>
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="flow-label no">KHÔNG ✗</div>
+                                <div class="flow-arrow no"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node action" style="border-color: #ef4444; color: #dc2626;">
+                                    <i class="fas fa-user-times me-2"></i>Unknown<br>
+                                    <small>Không nhận diện</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registration Flow -->
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold mb-4 text-center">
+                            <i class="fas fa-user-plus text-success me-2"></i>
+                            Luồng Đăng ký khuôn mặt
+                        </h5>
+                        
+                        <div class="flow-node start-end">
+                            <i class="fas fa-play me-2"></i>BẮT ĐẦU ĐĂNG KÝ
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                        
+                        <div class="flow-node io">
+                            <span><i class="fas fa-upload me-2"></i>Upload ảnh khuôn mặt</span>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                        
+                        <div class="flow-node process">
+                            <i class="fas fa-search me-2"></i>Phát hiện khuôn mặt trong ảnh
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                        
+                        <div class="text-center my-4">
+                            <div class="flow-node decision mx-auto">
+                                Đúng 1 khuôn mặt?
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <div class="flow-label yes">CÓ ✓</div>
+                                <div class="flow-arrow yes"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node database">
+                                    <i class="fas fa-save me-2"></i>Lưu ảnh vào<br>face_dataset/
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node database">
+                                    <i class="fas fa-database me-2"></i>Tạo record FaceImage
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node process">
+                                    <i class="fas fa-sync me-2"></i>Reload Face Database<br>
+                                    <small>(Tính toán lại embedding)</small>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node start-end">
+                                    <i class="fas fa-check me-2"></i>HOÀN TẤT
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="flow-label no">KHÔNG ✗</div>
+                                <div class="flow-arrow no"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node action" style="border-color: #ef4444; color: #dc2626;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Bỏ qua ảnh<br>
+                                    <small>Không hợp lệ</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="section-header">
+                <h3><i class="fas fa-layer-group me-2 text-info"></i>Công nghệ sử dụng</h3>
+                <span class="section-badge">Technology Stack</span>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="tech-card">
+                        <h5><i class="fas fa-brain text-purple"></i>AI & Machine Learning</h5>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-purple bg-opacity-10 text-purple">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">InsightFace</div>
+                                <div class="tech-desc">Face Analysis Library</div>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-success bg-opacity-10 text-success">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">buffalo_l</div>
+                                <div class="tech-desc">Pre-trained Model</div>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-info bg-opacity-10 text-info">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">Cosine Similarity</div>
+                                <div class="tech-desc">Face Matching Algorithm</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="tech-card">
+                        <h5><i class="fas fa-code text-primary"></i>Backend Framework</h5>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="fab fa-python"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">Django 4.2</div>
+                                <div class="tech-desc">Web Framework</div>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-warning bg-opacity-10 text-warning">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">SQLite / PostgreSQL</div>
+                                <div class="tech-desc">Database Storage</div>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-danger bg-opacity-10 text-danger">
+                                <i class="fas fa-broadcast-tower"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">MQTT Client</div>
+                                <div class="tech-desc">IoT Communication</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="tech-card">
+                        <h5><i class="fas fa-image text-success"></i>Image Processing</h5>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-success bg-opacity-10 text-success">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">OpenCV (cv2)</div>
+                                <div class="tech-desc">Image Capture & Processing</div>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-info bg-opacity-10 text-info">
+                                <i class="fas fa-th"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">NumPy</div>
+                                <div class="tech-desc">Array Operations</div>
+                            </div>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon bg-secondary bg-opacity-10 text-secondary">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                            <div>
+                                <div class="tech-name">CUDA / CPU</div>
+                                <div class="tech-desc">Execution Provider</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Algorithm Details -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="section-header">
+                <h3><i class="fas fa-cogs me-2 text-warning"></i>Chi tiết Thuật toán</h3>
+                <span class="section-badge">Algorithm Details</span>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-7">
+                    <div class="algo-step">
+                        <div class="algo-step-num">1</div>
+                        <div class="algo-step-content">
+                            <div class="algo-step-title">Khởi tạo Face Analyzer</div>
+                            <div class="algo-step-desc">
+                                Tải model InsightFace buffalo_l với các provider theo thứ tự ưu tiên: CUDA → DirectML → CPU
+                            </div>
+                            <div class="code-snippet">
+<span class="code-keyword">from</span> insightface.app <span class="code-keyword">import</span> FaceAnalysis
+face_analyzer = FaceAnalysis(<span class="code-string">name='buffalo_l'</span>)
+face_analyzer.prepare(<span class="code-string">ctx_id=0</span>, <span class="code-string">det_size=(640, 640)</span>)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="algo-step">
+                        <div class="algo-step-num">2</div>
+                        <div class="algo-step-content">
+                            <div class="algo-step-title">Load Face Database</div>
+                            <div class="algo-step-desc">
+                                Đọc tất cả FaceUser đang active từ database, tính toán embedding trung bình từ nhiều ảnh của mỗi người
+                            </div>
+                            <div class="code-snippet">
+<span class="code-comment"># Tính trung bình embedding cho mỗi người</span>
+averaged_embedding = np.<span class="code-function">mean</span>(embeddings, <span class="code-string">axis=0</span>)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="algo-step">
+                        <div class="algo-step-num">3</div>
+                        <div class="algo-step-content">
+                            <div class="algo-step-title">Phát hiện & Trích xuất</div>
+                            <div class="algo-step-desc">
+                                Với mỗi frame từ camera, phát hiện khuôn mặt và trích xuất vector embedding 512 chiều
+                            </div>
+                            <div class="code-snippet">
+faces = analyzer.<span class="code-function">get</span>(frame)
+<span class="code-keyword">for</span> face <span class="code-keyword">in</span> faces:
+    embedding = face.<span class="code-function">normed_embedding</span>  <span class="code-comment"># 512D vector</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="algo-step">
+                        <div class="algo-step-num">4</div>
+                        <div class="algo-step-content">
+                            <div class="algo-step-title">So sánh Cosine Similarity</div>
+                            <div class="algo-step-desc">
+                                So sánh embedding của khuôn mặt phát hiện được với tất cả embedding trong database
+                            </div>
+                            <div class="code-snippet">
+<span class="code-keyword">from</span> sklearn.metrics.pairwise <span class="code-keyword">import</span> cosine_similarity
+similarity = <span class="code-function">cosine_similarity</span>([face_emb], [db_emb])[<span class="code-number">0</span>][<span class="code-number">0</span>]
+<span class="code-keyword">if</span> similarity > <span class="code-number">0.5</span>:  <span class="code-comment"># threshold</span>
+    <span class="code-comment"># Nhận diện thành công!</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="algo-step">
+                        <div class="algo-step-num">5</div>
+                        <div class="algo-step-content">
+                            <div class="algo-step-title">Ghi log & Điều khiển</div>
+                            <div class="algo-step-desc">
+                                Nếu nhận diện thành công và đủ khoảng cách thời gian (15s), ghi log điểm danh và gửi lệnh mở cửa qua MQTT
+                            </div>
+                            <div class="code-snippet">
+<span class="code-keyword">if</span> <span class="code-function">can_record_attendance</span>(user_code):
+    <span class="code-function">log_attendance</span>(face_user, <span class="code-string">'check'</span>, confidence)
+    <span class="code-function">send_door_open_command</span>(face_user)  <span class="code-comment"># MQTT</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-5">
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3"><i class="fas fa-sliders-h me-2"></i>Tham số cấu hình</h5>
+                            <table class="param-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tham số</th>
+                                        <th>Giá trị</th>
+                                        <th>Mô tả</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="param-name">THRESHOLD</span></td>
+                                        <td><span class="param-value">0.5</span></td>
+                                        <td>Ngưỡng nhận diện</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="param-name">INTERVAL</span></td>
+                                        <td><span class="param-value">15s</span></td>
+                                        <td>Khoảng cách điểm danh</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="param-name">det_size</span></td>
+                                        <td><span class="param-value">640x640</span></td>
+                                        <td>Kích thước detect</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="param-name">embedding</span></td>
+                                        <td><span class="param-value">512D</span></td>
+                                        <td>Số chiều vector</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="param-name">model</span></td>
+                                        <td><span class="param-value">buffalo_l</span></td>
+                                        <td>Model AI</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3"><i class="fas fa-chart-line me-2"></i>Hiệu suất</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Độ chính xác</span>
+                                <span class="fw-bold">> 99%</span>
+                            </div>
+                            <div class="progress bg-white bg-opacity-25 mb-3" style="height: 8px;">
+                                <div class="progress-bar bg-white" style="width: 99%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tốc độ xử lý</span>
+                                <span class="fw-bold">~30 FPS</span>
+                            </div>
+                            <div class="progress bg-white bg-opacity-25" style="height: 8px;">
+                                <div class="progress-bar bg-white" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card border-0 bg-info bg-opacity-10">
+                        <div class="card-body">
+                            <h5 class="fw-bold text-info mb-3"><i class="fas fa-lightbulb me-2"></i>Ghi chú</h5>
+                            <ul class="mb-0 ps-3">
+                                <li class="mb-2">Embedding được chuẩn hóa (normalized) trước khi so sánh</li>
+                                <li class="mb-2">Hỗ trợ nhiều ảnh cho mỗi người để tăng độ chính xác</li>
+                                <li class="mb-2">Tự động bỏ qua ảnh có nhiều hơn 1 khuôn mặt</li>
+                                <li>Gửi lệnh MQTT mở cửa khi nhận diện thành công</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Flow -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="section-header">
+                <h3><i class="fas fa-exchange-alt me-2 text-danger"></i>Luồng dữ liệu</h3>
+                <span class="section-badge">Data Flow</span>
+            </div>
+            
+            <div class="row align-items-center text-center">
+                <div class="col-md-2">
+                    <div class="p-3 bg-primary bg-opacity-10 rounded-3">
+                        <i class="fas fa-camera fa-2x text-primary mb-2"></i>
+                        <div class="fw-bold">Camera</div>
+                        <small class="text-muted">Video Stream</small>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <i class="fas fa-arrow-right fa-lg text-muted"></i>
+                </div>
+                <div class="col-md-2">
+                    <div class="p-3 bg-success bg-opacity-10 rounded-3">
+                        <i class="fas fa-brain fa-2x text-success mb-2"></i>
+                        <div class="fw-bold">InsightFace</div>
+                        <small class="text-muted">Face Detection</small>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <i class="fas fa-arrow-right fa-lg text-muted"></i>
+                </div>
+                <div class="col-md-2">
+                    <div class="p-3 bg-warning bg-opacity-10 rounded-3">
+                        <i class="fas fa-database fa-2x text-warning mb-2"></i>
+                        <div class="fw-bold">Database</div>
+                        <small class="text-muted">Face Matching</small>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <i class="fas fa-arrow-right fa-lg text-muted"></i>
+                </div>
+                <div class="col-md-2">
+                    <div class="p-3 bg-info bg-opacity-10 rounded-3">
+                        <i class="fas fa-broadcast-tower fa-2x text-info mb-2"></i>
+                        <div class="fw-bold">MQTT</div>
+                        <small class="text-muted">Door Control</small>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <i class="fas fa-arrow-right fa-lg text-muted"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock content %}

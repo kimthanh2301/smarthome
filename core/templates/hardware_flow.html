@@ -1,0 +1,608 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Lưu đồ hoạt động phần cứng {% endblock %}
+
+{% block stylesheets %}
+<style>
+    .flow-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+        color: #f8fafc;
+        padding: 32px;
+        border-radius: 14px;
+        margin-bottom: 28px;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.25);
+    }
+    .flow-hero h1 {
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    .flow-pill {
+        display: inline-flex;
+        align-items: center;
+        font-size: 13px;
+        text-transform: uppercase;
+        background: rgba(15,23,42,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 6px 14px;
+        border-radius: 999px;
+        letter-spacing: 0.1em;
+    }
+    .flow-pill i {
+        margin-right: 6px;
+    }
+    .flow-stats .card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(15,23,42,0.08);
+    }
+    .flow-stats .stat-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .flow-stats .stat-label {
+        text-transform: uppercase;
+        font-size: 12px;
+        color: #64748b;
+        letter-spacing: 0.1em;
+    }
+
+    .flow-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+    .flow-card {
+        border-radius: 16px;
+        padding: 18px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        box-shadow: 0 8px 20px rgba(15,23,42,0.08);
+        position: relative;
+    }
+    .flow-card::after {
+        content: '';
+        position: absolute;
+        top: -12px;
+        left: 24px;
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+    }
+    .flow-card.overview::after { background: #2563eb; }
+    .flow-card.sensors::after { background: #22c55e; }
+    .flow-card.control::after { background: #f97316; }
+    .flow-card.connectivity::after { background: #0ea5e9; }
+
+    .flow-diagram {
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 30px;
+        border: 1px solid #e2e8f0;
+    }
+    .flow-step {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    .flow-step:last-child { margin-bottom: 0; }
+    .flow-step .badge {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 16px;
+        font-size: 16px;
+    }
+    .flow-step .step-body {
+        flex: 1;
+        background: #fff;
+        border-radius: 14px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 6px 18px rgba(15,23,42,0.05);
+    }
+    .flow-step .step-body h5 {
+        margin-bottom: 6px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .sensor-detail {
+        border-radius: 18px;
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        height: 100%;
+        background: #fff;
+        box-shadow: 0 8px 26px rgba(15,23,42,0.08);
+    }
+    .sensor-detail h5 {
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .chip-tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #eff6ff;
+        color: #1d4ed8;
+        margin-right: 8px;
+        margin-bottom: 6px;
+    }
+    .sensor-meta {
+        font-size: 13px;
+        color: #475569;
+        margin-bottom: 4px;
+    }
+
+    .mqtt-flow {
+        border-radius: 18px;
+        padding: 24px;
+        background: linear-gradient(120deg, #0ea5e9 0%, #2563eb 100%);
+        color: white;
+    }
+    .mqtt-flow h4 {
+        font-weight: 800;
+    }
+    .mqtt-topic {
+        background: rgba(15,23,42,0.3);
+        border-radius: 999px;
+        padding: 6px 14px;
+        display: inline-flex;
+        align-items: center;
+        margin: 4px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .data-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+    .data-timeline::before {
+        content: '';
+        position: absolute;
+        left: 16px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, #22d3ee 0%, #6366f1 100%);
+        border-radius: 3px;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 24px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -28px;
+        top: 4px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid #0ea5e9;
+        background: #fff;
+    }
+    .timeline-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        padding: 16px;
+        box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+    }
+    .legend-card {
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 20px;
+        border: 1px dashed #cbd5f5;
+    }
+    .legend-card span {
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        margin-right: 16px;
+        margin-bottom: 8px;
+    }
+    .legend-card span::before {
+        content: '';
+        width: 18px;
+        height: 4px;
+        border-radius: 2px;
+        margin-right: 6px;
+    }
+    .legend-card .power::before { background: #f97316; }
+    .legend-card .sensors::before { background: #22c55e; }
+    .legend-card .mqtt::before { background: #0ea5e9; }
+    .legend-card .cloud::before { background: #a855f7; }
+
+    /* Flowchart Styles */
+    .flowchart-container {
+        background: #f8fafc;
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid #e2e8f0;
+        position: relative;
+        overflow: hidden;
+    }
+    .flow-node {
+        padding: 16px 24px;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        margin: 10px auto;
+        max-width: 280px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        position: relative;
+        z-index: 2;
+    }
+    .flow-node.start-end {
+        background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+        color: white;
+        border-radius: 50px;
+    }
+    .flow-node.process {
+        background: #fff;
+        border: 2px solid #3b82f6;
+        color: #1e40af;
+    }
+    .flow-node.decision {
+        background: #fef3c7;
+        border: 2px solid #f59e0b;
+        color: #92400e;
+        transform: rotate(0deg);
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        padding: 35px 20px;
+        width: 180px;
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .flow-node.io {
+        background: #dcfce7;
+        border: 2px solid #22c55e;
+        color: #166534;
+        transform: skewX(-10deg);
+    }
+    .flow-node.io span {
+        display: block;
+        transform: skewX(10deg);
+    }
+    .flow-node.cloud {
+        background: #e0f2fe;
+        border: 2px solid #0ea5e9;
+        color: #0369a1;
+        border-radius: 30px;
+        border-style: dashed;
+    }
+    
+    .flow-arrow {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 24px;
+        margin: 8px 0;
+        position: relative;
+        z-index: 1;
+    }
+    .flow-arrow.yes { color: #22c55e; }
+    .flow-arrow.no { color: #ef4444; }
+    
+    .flow-label {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: -8px;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+    .flow-label.yes { color: #22c55e; }
+    .flow-label.no { color: #ef4444; }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<main class="content">
+    {% include 'includes/navigation.html' %}
+
+    <div class="flow-hero">
+        <div class="flow-pill mb-3"><i class="fas fa-microchip"></i>Hardware Flow</div>
+        <h1 class="mb-3">Lưu đồ hoạt động phần cứng Smart Home</h1>
+        <p class="mb-0 text-white-50">Từ kiến trúc tổng quan đến luồng dữ liệu chi tiết giữa ESP32, cảm biến và nền tảng MQTT.</p>
+    </div>
+
+    <div class="row flow-stats mb-4">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card p-3 text-center">
+                <div class="stat-value text-primary">01</div>
+                <div class="stat-label">Bo mạch ESP32</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card p-3 text-center">
+                <div class="stat-value text-success">05</div>
+                <div class="stat-label">Cảm biến/relay</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card p-3 text-center">
+                <div class="stat-value text-warning">6</div>
+                <div class="stat-label">Topic MQTT</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card p-3 text-center">
+                <div class="stat-value text-info">15s</div>
+                <div class="stat-label">Chu kỳ Face ID</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flow-grid mb-4">
+        <div class="flow-card overview">
+            <h5><i class="fas fa-layer-group text-primary mr-2"></i>Tổng quan tầng</h5>
+            <ul class="pl-3 mb-0 small text-muted">
+                <li>Lớp cảm biến/thiết bị: DHT22, MQ-2, relay, PIR</li>
+                <li>Lớp điều khiển: ESP32 + FreeRTOS task</li>
+                <li>Lớp truyền thông: MQTT trên WiFi</li>
+                <li>Lớp dịch vụ: Django + WebSocket Dashboard</li>
+            </ul>
+        </div>
+        <div class="flow-card sensors">
+            <h5><i class="fas fa-broadcast-tower text-success mr-2"></i>Chu kỳ cảm biến</h5>
+            <p class="small text-muted mb-1">- Sensor loop: 5 phút/ghi log</p>
+            <p class="small text-muted mb-1">- Relay loop: 200 ms cho phản hồi realtime</p>
+            <p class="small text-muted mb-0">- Face recognition trigger mỗi 15 giây</p>
+        </div>
+        <div class="flow-card control">
+            <h5><i class="fas fa-project-diagram text-warning mr-2"></i>Điều khiển</h5>
+            <p class="small text-muted mb-2">Task tách biệt: `sensorTask`, `mqttTask`, `cameraTask`.</p>
+            <p class="small text-muted mb-0">Queue nội bộ chống chặn, ưu tiên cảnh báo khói.</p>
+        </div>
+        <div class="flow-card connectivity">
+            <h5><i class="fas fa-wifi text-info mr-2"></i>Kết nối</h5>
+            <p class="small text-muted mb-1">WiFi SSID: doantotnghiep</p>
+            <p class="small text-muted mb-1">MQTT Broker: 103.252.136.205:1883</p>
+            <p class="small text-muted mb-0">TLS optional, sử dụng API Key trong payload.</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-route text-primary mr-2"></i>Lưu đồ thuật toán phần cứng (Hardware Algorithm Flowchart)</h4>
+            <div class="flowchart-container">
+                <div class="row">
+                    <!-- Device Side -->
+                    <div class="col-lg-6 border-right border-light">
+                        <h5 class="text-center mb-4 text-primary"><i class="fas fa-microchip me-2"></i>ESP32 / Device Side</h5>
+                        
+                        <div class="flow-node start-end">
+                            <i class="fas fa-power-off me-2"></i>START / POWER ON
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                        <div class="flow-node process">
+                            <i class="fas fa-sync me-2"></i>Init WiFi & MQTT
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                        <div class="flow-node io">
+                            <span><i class="fas fa-thermometer-half me-2"></i>Đọc Sensors (DHT, MQ2, PIR)</span>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                        <div class="text-center my-4">
+                            <div class="flow-node decision mx-auto">
+                                Khói > 400ppm?
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <div class="flow-label yes">CÓ (YES)</div>
+                                <div class="flow-arrow yes"><i class="fas fa-arrow-down"></i></div>
+                                <div class="flow-node process" style="border-color: #ef4444; color: #dc2626; background: #fef2f2;">
+                                    <i class="fas fa-bell me-2"></i>BẬT CÒI BÁO ĐỘNG
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="flow-label no">KHÔNG (NO)</div>
+                                <div class="flow-arrow no"><i class="fas fa-arrow-down"></i></div>
+                                <div class="flow-node process">
+                                    <i class="fas fa-check me-2"></i>Trạng thái bình thường
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+                        
+                        <div class="flow-node process">
+                            <i class="fas fa-file-code me-2"></i>Đóng gói JSON + HMAC
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                        <div class="flow-node io">
+                            <span><i class="fas fa-paper-plane me-2"></i>MQTT Publish</span>
+                        </div>
+                    </div>
+
+                    <!-- Server Side -->
+                    <div class="col-lg-6">
+                        <h5 class="text-center mb-4 text-success"><i class="fas fa-cloud me-2"></i>Server / Cloud Side</h5>
+                        
+                        <div class="flow-node cloud mt-5">
+                            <i class="fas fa-server me-2"></i>MQTT Broker
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                        <div class="flow-node process">
+                            <i class="fab fa-python me-2"></i>Django MQTT Worker
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                        <div class="text-center my-4">
+                            <div class="flow-node decision mx-auto" style="width: 150px; height: 150px; padding: 20px;">
+                                Valid Signature?
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <div class="flow-label yes">VALID</div>
+                                <div class="flow-arrow yes"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node process">
+                                    <i class="fas fa-database me-2"></i>Lưu DB & Redis
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                                <div class="flow-node io">
+                                    <span><i class="fas fa-broadcast-tower me-2"></i>WebSocket Push</span>
+                                </div>
+                                <div class="flow-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                                <div class="flow-node start-end">
+                                    <i class="fas fa-desktop me-2"></i>UPDATE DASHBOARD
+                                </div>
+                            </div>
+                            <div class="col-6 text-center">
+                                <div class="flow-label no">INVALID</div>
+                                <div class="flow-arrow no"><i class="fas fa-arrow-down"></i></div>
+                                
+                                <div class="flow-node process" style="border-color: #ef4444; color: #dc2626;">
+                                    <i class="fas fa-trash me-2"></i>Drop Message
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-4">
+            <div class="sensor-detail h-100">
+                <div class="chip-tag"><i class="fas fa-thermometer-half mr-1"></i>Sensor Cluster</div>
+                <h5 class="mt-2 mb-3">Chi tiết chân kết nối</h5>
+                <div class="sensor-meta">- DHT22 (GPIO 15) -> Nhiệt độ/Độ ẩm</div>
+                <div class="sensor-meta">- MQ-2 (GPIO 34 / ADC1) -> Khói/Gas</div>
+                <div class="sensor-meta">- PIR (GPIO 27) -> Phát hiện chuyển động</div>
+                <div class="sensor-meta">- Reed Switch (GPIO 26) -> Mở cửa</div>
+                <div class="sensor-meta">- Relay 4 kênh (GPIO 12/14/25/33)</div>
+                <hr>
+                <p class="small text-muted mb-2"><strong>Sampling:</strong> 2s/lần -> lưu buffer Rolling 10 mẫu.</p>
+                <p class="small text-muted mb-0"><strong>Fail-safe:</strong> Nếu MQ-2 > ngưỡng 400ppm -> bật còi & gửi notification lập tức.</p>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="sensor-detail h-100">
+                <div class="chip-tag" style="background:#ecfeff;color:#0f766e;"><i class="fas fa-microchip mr-1"></i>Control Logic</div>
+                <h5 class="mt-2 mb-3">Các task chính trên ESP32</h5>
+                <ul class="small text-muted mb-3 pl-3">
+                    <li><strong>sensorTask (core 1):</strong> đọc ADC/GPIO, chuẩn hóa dữ liệu.</li>
+                    <li><strong>mqttTask (core 0):</strong> publish/subcribe, duy trì QoS1.</li>
+                    <li><strong>cameraTask:</strong> gửi ảnh lên server để nhận diện.</li>
+                    <li><strong>watchdog:</strong> reset WiFi nếu mất kết nối > 30s.</li>
+                </ul>
+                <p class="small text-muted mb-0">Queues nội bộ giúp ưu tiên cảnh báo và tránh block khi camera xử lý lâu.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-7 mb-4">
+            <div class="mqtt-flow h-100">
+                <h4 class="mb-3"><i class="fas fa-cloud-upload-alt mr-2"></i>Luồng MQTT chi tiết</h4>
+                <div class="mb-3">
+                    <div class="mqtt-topic"><i class="fas fa-arrow-up mr-1"></i>{api_key}/sensors</div>
+                    <div class="mqtt-topic"><i class="fas fa-arrow-up mr-1"></i>{api_key}/face/status</div>
+                    <div class="mqtt-topic"><i class="fas fa-arrow-down mr-1"></i>{api_key}/control/relay-#</div>
+                    <div class="mqtt-topic"><i class="fas fa-arrow-down mr-1"></i>{api_key}/control/mode</div>
+                </div>
+                <ul class="small mb-0">
+                    <li>Payload nén JSON, gồm timestamp UTC, checksum CRC16.</li>
+                    <li>QoS1 cho `sensors`, QoS0 cho `control` để giảm độ trễ.</li>
+                    <li>Retain flag bật với `control/mode` để ESP32 đồng bộ sau reboot.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-5 mb-4">
+            <div class="legend-card h-100">
+                <h6 class="mb-3"><i class="fas fa-info-circle mr-2 text-primary"></i>Legend</h6>
+                <span class="power">Nguồn/Relay</span>
+                <span class="sensors">Cảm biến</span>
+                <span class="mqtt">MQTT</span>
+                <span class="cloud">Server/Cloud</span>
+                <p class="small text-muted mt-3 mb-0">Các đường màu tương ứng trong lưu đồ chính.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-stream text-success mr-2"></i>Timeline dữ liệu chi tiết</h4>
+            <div class="data-timeline">
+                <div class="timeline-item">
+                    <div class="timeline-card">
+                        <h6 class="mb-1">0 - 50ms - GPIO Sampling</h6>
+                        <p class="small mb-0 text-muted">ADC đọc 10 mẫu, áp dụng bộ lọc trung vị, lưu vào ring buffer.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-card">
+                        <h6 class="mb-1">50 - 120ms - Normalization</h6>
+                        <p class="small mb-0 text-muted">ESP32 chuẩn hóa dữ liệu (temp degC, humidity %, ppm), bổ sung trạng thái relay.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-card">
+                        <h6 class="mb-1">120 - 180ms - MQTT Publish</h6>
+                        <p class="small mb-0 text-muted">Payload JSON + chữ ký HMAC(api_key) -> gửi lên broker. Nếu lỗi -> retry exponential backoff.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-card">
+                        <h6 class="mb-1">180 - 400ms - Server & Dashboard</h6>
+                        <p class="small mb-0 text-muted">Worker nhận message -> ghi `SensorLog`, cập nhật cache, phát WebSocket tới UI.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-tools text-danger mr-2"></i>Kịch bản lỗi & khôi phục</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Mất WiFi</h6>
+                    <p class="small text-muted">ESP32 bật chế độ AP tạm, ghi log vào flash và retry kết nối mỗi 30 giây.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6>Mất MQTT Broker</h6>
+                    <p class="small text-muted">Chuyển sang queue nội bộ, đồng bộ lại khi kết nối thành công để không mất dữ liệu.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6>Face ID Timeout</h6>
+                    <p class="small text-muted">Nếu camera > 15 giây không phản hồi → gửi trạng thái lỗi qua topic `face/status`.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center py-3">
+        <a href="{% url 'database_schema' %}" class="btn btn-outline-secondary mr-2"><i class="fas fa-database mr-2"></i>Sơ đồ Database</a>
+        <a href="{% url 'smart_home' %}" class="btn btn-primary"><i class="fas fa-arrow-left mr-2"></i>Quay lại Dashboard</a>
+    </div>
+
+    {% include 'includes/footer.html' %}
+</main>
+{% endblock content %}
+
+{% block javascripts %}{% endblock javascripts %}

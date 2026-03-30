@@ -1,0 +1,722 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} ESP32 Camera - Face Recognition {% endblock %}
+
+{% block stylesheets %}
+<style>
+    .camera-container {
+        position: relative;
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .camera-feed {
+        width: 100%;
+        height: auto;
+        min-height: 400px;
+        object-fit: contain;
+        display: block;
+    }
+    
+    .camera-overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        pointer-events: none;
+    }
+    
+    .camera-overlay > * {
+        pointer-events: auto;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+    }
+    
+    .status-connected {
+        background: rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+    
+    .status-disconnected {
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+    
+    .status-connecting {
+        background: rgba(255, 193, 7, 0.9);
+        color: #000;
+    }
+    
+    .camera-controls {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .camera-controls .btn {
+        backdrop-filter: blur(10px);
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+    
+    .camera-controls .btn:hover {
+        background: rgba(255,255,255,0.4);
+    }
+    
+    .recognition-log {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .log-item {
+        padding: 12px;
+        border-left: 4px solid #28a745;
+        background: #f8f9fa;
+        margin-bottom: 8px;
+        border-radius: 0 8px 8px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .log-item:hover {
+        background: #e9ecef;
+        transform: translateX(4px);
+    }
+    
+    .log-item.new {
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .user-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .user-card.recognized {
+        border-color: #28a745;
+        animation: pulse-green 0.5s ease;
+    }
+    
+    @keyframes pulse-green {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4); }
+        50% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+    }
+    
+    .settings-panel {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    .fps-display {
+        font-family: monospace;
+        font-size: 0.9rem;
+        background: rgba(0,0,0,0.7);
+        color: #0f0;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    .fullscreen-btn {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    
+    .camera-container.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        border-radius: 0;
+    }
+    
+    .camera-container.fullscreen .camera-feed {
+        height: 100vh;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<main class="content">
+    {% include 'includes/navigation.html' %}
+    
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+        <div>
+            <h2 class="h4">
+                <i class="fas fa-video me-2"></i>ESP32 Camera - Face Recognition
+            </h2>
+            <p class="mb-0 text-muted">
+                Stream camera từ ESP32-CAM với nhận diện khuôn mặt realtime
+            </p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'face_users_list' %}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-users me-1"></i> Quản lý Face ID
+            </a>
+            <a href="{% url 'smart_home' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-home me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Camera Feed -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-camera me-2"></i>Camera Feed
+                    </h5>
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="fps-display" id="fpsDisplay">FPS: --</span>
+                        <span class="status-badge status-connecting" id="cameraStatus">
+                            <i class="fas fa-spinner fa-spin me-1"></i>Đang kết nối...
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="camera-container" id="cameraContainer">
+                        <img src="{% url 'esp32_video_feed' %}?recognition=true" 
+                             class="camera-feed" 
+                             id="cameraFeed"
+                             alt="ESP32 Camera Feed"
+                             onerror="handleCameraError()"
+                             onload="handleCameraLoad()">
+                        
+                        <div class="camera-overlay">
+                            <div class="camera-controls">
+                                <button class="btn" onclick="toggleRecognition()" id="toggleRecBtn" title="Bật/Tắt nhận diện">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                                <button class="btn" onclick="captureFrame()" title="Chụp ảnh">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                                <button class="btn" onclick="reconnectCamera()" title="Kết nối lại">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <button class="fullscreen-btn" onclick="toggleFullscreen()" title="Toàn màn hình">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Camera Settings -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Cài đặt Camera
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">URL Camera MJPEG</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="cameraUrl" 
+                                       value="{{ camera_url }}" placeholder="http://192.168.137.108/mjpeg/1">
+                                <button class="btn btn-primary" onclick="updateCameraUrl()">
+                                    <i class="fas fa-check"></i> Áp dụng
+                                </button>
+                            </div>
+                            <small class="text-muted">Nhập URL stream MJPEG từ ESP32-CAM</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Chế độ</label>
+                            <select class="form-select" id="streamMode" onchange="changeStreamMode()">
+                                <option value="recognition" selected>Với nhận diện</option>
+                                <option value="raw">Stream gốc</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="autoReconnect" checked>
+                                <label class="form-check-label" for="autoReconnect">
+                                    Tự động kết nối lại khi mất kết nối
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recognition Logs & Users -->
+        <div class="col-lg-4">
+            <!-- Recognition Logs -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Lịch sử nhận diện
+                    </h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshLogs()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="card-body recognition-log" id="recognitionLog">
+                    {% if today_logs %}
+                        {% for log in today_logs %}
+                        <div class="log-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>{{ log.face_user.name }}</strong>
+                                <span class="badge bg-success">{{ log.confidence|floatformat:0 }}%</span>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>{{ log.timestamp|time:"H:i:s" }}
+                                - {{ log.get_event_type_display }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Chưa có lịch sử nhận diện hôm nay</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Registered Users -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>Người dùng đã đăng ký
+                    </h5>
+                    <span class="badge bg-primary">{{ face_users.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if face_users %}
+                        <div class="row g-2">
+                            {% for user in face_users %}
+                            <div class="col-6">
+                                <div class="user-card card h-100" id="user-{{ user.user_code }}">
+                                    <div class="card-body text-center py-3">
+                                        <i class="fas fa-user-circle fa-2x text-primary mb-2"></i>
+                                        <h6 class="mb-1">{{ user.name }}</h6>
+                                        <small class="text-muted">{{ user.user_code }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-user-plus fa-3x mb-3"></i>
+                            <p>Chưa có người dùng nào</p>
+                            <a href="{% url 'face_users_list' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Thêm người dùng
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <button class="btn btn-outline-primary w-100 mb-2" onclick="reloadDatabase()">
+                        <i class="fas fa-database me-2"></i>Reload Face Database
+                    </button>
+                    <a href="{% url 'face_users_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-cog me-2"></i>Quản lý Face ID
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Captured Image Modal -->
+    <div class="modal fade" id="captureModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-camera me-2"></i>Ảnh đã chụp
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="" id="capturedImage" class="img-fluid rounded" alt="Captured">
+                    <div id="captureRecognized" class="mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="downloadCapture()">
+                        <i class="fas fa-download me-1"></i>Tải xuống
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+    // Variables
+    let recognitionEnabled = true;
+    let cameraConnected = false;
+    let autoReconnect = true;
+    let reconnectTimeout = null;
+    let statusCheckInterval = null;
+    let logsRefreshInterval = null;
+    
+    const cameraUrl = '{{ camera_url }}';
+    const csrfToken = '{{ csrf_token }}';
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        startStatusCheck();
+        startLogsRefresh();
+        
+        document.getElementById('autoReconnect').addEventListener('change', function() {
+            autoReconnect = this.checked;
+        });
+    });
+    
+    // Camera Status Check
+    function startStatusCheck() {
+        checkCameraStatus();
+        statusCheckInterval = setInterval(checkCameraStatus, 5000);
+    }
+    
+    function checkCameraStatus() {
+        fetch(`{% url 'esp32_camera_status' %}?camera_url=${encodeURIComponent(document.getElementById('cameraUrl').value)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateStatusUI(data.status);
+                }
+            })
+            .catch(err => {
+                console.error('Status check failed:', err);
+            });
+    }
+    
+    function updateStatusUI(status) {
+        const statusEl = document.getElementById('cameraStatus');
+        const fpsEl = document.getElementById('fpsDisplay');
+        
+        if (status.connected) {
+            cameraConnected = true;
+            statusEl.className = 'status-badge status-connected';
+            statusEl.innerHTML = '<i class="fas fa-check-circle me-1"></i>Đã kết nối';
+            fpsEl.textContent = `FPS: ${status.fps}`;
+        } else {
+            cameraConnected = false;
+            statusEl.className = 'status-badge status-disconnected';
+            statusEl.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>Mất kết nối';
+            fpsEl.textContent = 'FPS: --';
+            
+            if (autoReconnect && !reconnectTimeout) {
+                scheduleReconnect();
+            }
+        }
+    }
+    
+    function handleCameraLoad() {
+        cameraConnected = true;
+        updateStatusUI({ connected: true, fps: 0 });
+    }
+    
+    function handleCameraError() {
+        cameraConnected = false;
+        updateStatusUI({ connected: false, fps: 0 });
+        
+        if (autoReconnect) {
+            scheduleReconnect();
+        }
+    }
+    
+    function scheduleReconnect() {
+        if (reconnectTimeout) return;
+        
+        reconnectTimeout = setTimeout(() => {
+            reconnectTimeout = null;
+            reconnectCamera();
+        }, 5000);
+    }
+    
+    // Camera Controls
+    function toggleRecognition() {
+        recognitionEnabled = !recognitionEnabled;
+        const btn = document.getElementById('toggleRecBtn');
+        const feed = document.getElementById('cameraFeed');
+        const url = document.getElementById('cameraUrl').value;
+        
+        if (recognitionEnabled) {
+            btn.innerHTML = '<i class="fas fa-user-check"></i>';
+            feed.src = `{% url 'esp32_video_feed' %}?camera_url=${encodeURIComponent(url)}&recognition=true`;
+        } else {
+            btn.innerHTML = '<i class="fas fa-user-slash"></i>';
+            feed.src = `{% url 'esp32_video_feed' %}?camera_url=${encodeURIComponent(url)}&recognition=false`;
+        }
+        
+        showNotification(recognitionEnabled ? 'Đã bật nhận diện' : 'Đã tắt nhận diện', 'info');
+    }
+    
+    function reconnectCamera() {
+        const statusEl = document.getElementById('cameraStatus');
+        statusEl.className = 'status-badge status-connecting';
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang kết nối...';
+        
+        fetch('{% url 'esp32_camera_reconnect' %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                camera_url: document.getElementById('cameraUrl').value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Đã kết nối lại camera', 'success');
+                refreshCameraFeed();
+            } else {
+                showNotification('Lỗi: ' + data.error, 'error');
+            }
+        })
+        .catch(err => {
+            showNotification('Lỗi kết nối: ' + err, 'error');
+        });
+    }
+    
+    function refreshCameraFeed() {
+        const feed = document.getElementById('cameraFeed');
+        const url = document.getElementById('cameraUrl').value;
+        const mode = recognitionEnabled ? 'true' : 'false';
+        
+        // Add timestamp to force reload
+        feed.src = `{% url 'esp32_video_feed' %}?camera_url=${encodeURIComponent(url)}&recognition=${mode}&t=${Date.now()}`;
+    }
+    
+    function updateCameraUrl() {
+        const url = document.getElementById('cameraUrl').value;
+        if (!url) {
+            showNotification('Vui lòng nhập URL camera', 'error');
+            return;
+        }
+        
+        showNotification('Đang cập nhật URL camera...', 'info');
+        refreshCameraFeed();
+    }
+    
+    function changeStreamMode() {
+        const mode = document.getElementById('streamMode').value;
+        recognitionEnabled = (mode === 'recognition');
+        refreshCameraFeed();
+    }
+    
+    function captureFrame() {
+        const url = document.getElementById('cameraUrl').value;
+        
+        fetch('{% url 'esp32_capture_frame' %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                camera_url: url,
+                recognition: recognitionEnabled
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('capturedImage').src = data.image;
+                
+                // Show recognized users
+                let recognizedHtml = '';
+                if (data.recognized && data.recognized.length > 0) {
+                    recognizedHtml = '<div class="alert alert-success">';
+                    data.recognized.forEach(user => {
+                        recognizedHtml += `<div><strong>${user.name}</strong> (${(user.confidence * 100).toFixed(1)}%)</div>`;
+                    });
+                    recognizedHtml += '</div>';
+                }
+                document.getElementById('captureRecognized').innerHTML = recognizedHtml;
+                
+                new bootstrap.Modal(document.getElementById('captureModal')).show();
+            } else {
+                showNotification('Lỗi: ' + data.error, 'error');
+            }
+        })
+        .catch(err => {
+            showNotification('Lỗi: ' + err, 'error');
+        });
+    }
+    
+    function downloadCapture() {
+        const img = document.getElementById('capturedImage');
+        const link = document.createElement('a');
+        link.download = `capture_${Date.now()}.jpg`;
+        link.href = img.src;
+        link.click();
+    }
+    
+    function toggleFullscreen() {
+        const container = document.getElementById('cameraContainer');
+        container.classList.toggle('fullscreen');
+        
+        const btn = container.querySelector('.fullscreen-btn i');
+        if (container.classList.contains('fullscreen')) {
+            btn.className = 'fas fa-compress';
+        } else {
+            btn.className = 'fas fa-expand';
+        }
+    }
+    
+    // ESC to exit fullscreen
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const container = document.getElementById('cameraContainer');
+            if (container.classList.contains('fullscreen')) {
+                toggleFullscreen();
+            }
+        }
+    });
+    
+    // Logs Refresh
+    function startLogsRefresh() {
+        logsRefreshInterval = setInterval(refreshLogs, 10000);
+    }
+    
+    function refreshLogs() {
+        fetch('{% url 'get_today_logs' %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.logs) {
+                    updateLogsUI(data.logs);
+                }
+            })
+            .catch(err => console.error('Logs refresh failed:', err));
+    }
+    
+    function updateLogsUI(logs) {
+        const container = document.getElementById('recognitionLog');
+        
+        if (logs.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>Chưa có lịch sử nhận diện hôm nay</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        logs.forEach((log, index) => {
+            html += `
+                <div class="log-item ${index === 0 ? 'new' : ''}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>${log.name}</strong>
+                        <span class="badge bg-success">${log.confidence}%</span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>${log.time} - ${log.event}
+                    </small>
+                </div>
+            `;
+            
+            // Highlight user card
+            highlightUserCard(log.user_code);
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    function highlightUserCard(userCode) {
+        const card = document.getElementById(`user-${userCode}`);
+        if (card) {
+            card.classList.add('recognized');
+            setTimeout(() => card.classList.remove('recognized'), 2000);
+        }
+    }
+    
+    // Database reload
+    function reloadDatabase() {
+        fetch('{% url 'reload_face_db' %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                } else {
+                    showNotification('Lỗi: ' + data.error, 'error');
+                }
+            })
+            .catch(err => {
+                showNotification('Lỗi: ' + err, 'error');
+            });
+    }
+    
+    // Notification
+    function showNotification(message, type = 'info') {
+        if (typeof notyf !== 'undefined') {
+            if (type === 'error') {
+                notyf.error(message);
+            } else if (type === 'success') {
+                notyf.success(message);
+            } else {
+                notyf.open({ type: 'info', message: message });
+            }
+        } else {
+            console.log(`[${type}] ${message}`);
+        }
+    }
+    
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (statusCheckInterval) clearInterval(statusCheckInterval);
+        if (logsRefreshInterval) clearInterval(logsRefreshInterval);
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    });
+</script>
+{% endblock javascripts %}

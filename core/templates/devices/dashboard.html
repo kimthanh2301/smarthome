@@ -1,0 +1,1246 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Smart Home Dashboard {% endblock %} 
+
+{% block stylesheets %}
+<!-- ApexCharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<style>
+    /* Custom Switch Styles cho Relay */
+    .relay-switch {
+        position: relative;
+        width: 50px;
+        height: 26px;
+    }
+    
+    .relay-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .relay-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 26px;
+    }
+    
+    .relay-slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .relay-slider {
+        background-color: #05A677;
+    }
+    
+    input:checked + .relay-slider:before {
+        transform: translateX(24px);
+    }
+    
+    /* Relay Card */
+    .relay-item {
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    
+    .relay-item .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+    
+    .relay-item .status-dot.online {
+        background-color: #05A677;
+    }
+    
+    .relay-item .status-dot.offline {
+        background-color: #FA5252;
+    }
+    
+    .relay-item .relay-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #1F2937;
+    }
+    
+    .relay-item .relay-id {
+        font-size: 0.75rem;
+        color: #6B7280;
+        background: #F3F4F6;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+    
+    .relay-item .relay-status {
+        font-size: 0.9rem;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 4px;
+    }
+    
+    .relay-item .relay-status.on {
+        color: #05A677;
+        background: rgba(5, 166, 119, 0.1);
+    }
+    
+    .relay-item .relay-status.off {
+        color: #FA5252;
+        background: rgba(250, 82, 82, 0.1);
+    }
+    
+    .relay-item .relay-time {
+        font-size: 0.75rem;
+        color: #6B7280;
+    }
+    
+    /* Sensor Card */
+    .sensor-item {
+        background: #fff;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        border-left: 4px solid;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .sensor-item.temperature {
+        border-left-color: #FA5252;
+    }
+    
+    .sensor-item.humidity {
+        border-left-color: #0948B3;
+    }
+    
+    .sensor-item.gas {
+        border-left-color: #F5B759;
+    }
+    
+    .sensor-item.motion {
+        border-left-color: #05A677;
+    }
+    
+    .sensor-item.light {
+        border-left-color: #F5B759;
+    }
+    
+    .sensor-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    
+    .sensor-icon.temperature {
+        background-color: rgba(250, 82, 82, 0.15);
+        color: #DC2626;
+    }
+    
+    .sensor-icon.humidity {
+        background-color: rgba(9, 72, 179, 0.15);
+        color: #1D4ED8;
+    }
+    
+    .sensor-icon.gas {
+        background-color: rgba(245, 158, 11, 0.15);
+        color: #D97706;
+    }
+    
+    .sensor-icon.motion {
+        background-color: rgba(5, 166, 119, 0.15);
+        color: #059669;
+    }
+    
+    .sensor-icon.light {
+        background-color: rgba(245, 158, 11, 0.15);
+        color: #D97706;
+    }
+    
+    .sensor-item .sensor-label {
+        font-size: 0.85rem;
+        color: #4B5563;
+        margin-bottom: 2px;
+        font-weight: 500;
+    }
+    
+    .sensor-item .sensor-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #111827;
+    }
+    
+    .sensor-item .sensor-unit {
+        font-size: 1rem;
+        color: #374151;
+        font-weight: 600;
+    }
+    
+    .sensor-item .sensor-time {
+        font-size: 0.75rem;
+        color: #6B7280;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin-bottom: 15px;
+    }
+    
+    .section-title .fas {
+        margin-right: 8px;
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    
+    .page-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .page-header p {
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    .btn-add-device {
+        background: #fff;
+        color: #667eea;
+        border: none;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .btn-add-device:hover {
+        background: #f3f4f6;
+        color: #5a67d8;
+        transform: translateY(-2px);
+    }
+    
+    /* Nút xóa thiết bị */
+    .btn-delete-device, .btn-edit-device {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: none;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .btn-delete-device {
+        background: rgba(250, 82, 82, 0.1);
+        color: #FA5252;
+    }
+    
+    .btn-edit-device {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+    }
+    
+    .btn-delete-device:hover {
+        background: #FA5252;
+        color: #fff;
+        transform: scale(1.1);
+    }
+    
+    .btn-edit-device:hover {
+        background: #3B82F6;
+        color: #fff;
+        transform: scale(1.1);
+    }
+    
+    .device-actions {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .relay-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .relay-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .sensor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+    
+    .device-code {
+        font-size: 0.65rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+    <main class="content">
+
+        {% include 'includes/navigation.html' %}
+
+        <!-- Header -->
+        <div class="page-header d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+            <div>
+                <h1><span class="fas fa-home mr-2"></span>Smart Home</h1>
+                <p>Quản lý và điều khiển thiết bị thông minh</p>
+            </div>
+            <div>
+                <a href="#" class="btn btn-add-device" data-toggle="modal" data-target="#addDeviceModal">
+                    <span class="fas fa-plus mr-1"></span> Thêm thiết bị
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content: 8-4 Layout -->
+        <div class="row">
+            <!-- Left Column - Relays + Chart -->
+            <div class="col-12 col-lg-8">
+                <!-- Relay Section -->
+                <div class="section-title">
+                    <span class="fas fa-toggle-on"></span> Thiết bị điều khiển (Relay)
+                </div>
+                
+                <div class="row">
+                    {% for relay in relays %}
+                    <div class="col-12 col-md-4 mb-3">
+                        <div class="relay-item" id="relay-card-{{ relay.id }}" data-device-code="{{ relay.device_code }}">
+                            <div class="relay-header mb-2">
+                                <div class="relay-info">
+                                    <span class="device-code">{{ relay.device_code|default:"---" }}</span>
+                                    <span class="status-dot {% if relay.is_online %}online{% else %}offline{% endif %}"></span>
+                                    <span class="relay-name">{{ relay.name }}</span>
+                                </div>
+                                <div class="device-actions">
+                                    <button type="button" class="btn-edit-device" onclick="openEditModal({{ relay.id }})" title="Sửa thiết bị">
+                                        <span class="fas fa-edit"></span>
+                                    </button>
+                                    <button type="button" class="btn-delete-device" onclick="confirmDelete({{ relay.id }}, '{{ relay.name }}')" title="Xóa thiết bị">
+                                        <span class="fas fa-trash-alt"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="relay-switch mb-0">
+                                    <input type="checkbox" 
+                                           id="relay-{{ relay.id }}" 
+                                           {% if relay.is_on %}checked{% endif %}
+                                           onchange="toggleRelay({{ relay.id }})">
+                                    <span class="relay-slider"></span>
+                                </label>
+                                <span class="relay-status {% if relay.is_on %}on{% else %}off{% endif %}" id="relay-status-{{ relay.id }}">
+                                    {% if relay.is_on %}BẬT{% else %}TẮT{% endif %}
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span class="relay-time" id="relay-time-{{ relay.id }}">
+                                    <span class="fas fa-clock mr-1"></span>Cập nhật: {{ relay.updated_at|date:"H:i d/m/Y" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="relay-item text-center py-4">
+                            <span class="fas fa-toggle-off fa-2x text-gray mb-2"></span>
+                            <p class="text-muted mb-0">Chưa có relay nào</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Chart Section -->
+                <div class="section-title mt-4">
+                    <span class="fas fa-chart-line"></span> Dữ liệu đồ thị cảm biến
+                </div>
+                <div class="card border-light shadow-sm">
+                    <div class="card-body">
+                        <!-- Time Range Buttons -->
+                        <div class="d-flex justify-content-center mb-3">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Time range">
+                                <button type="button" class="btn btn-outline-primary time-btn" data-hours="1">1h</button>
+                                <button type="button" class="btn btn-outline-primary time-btn" data-hours="3">3h</button>
+                                <button type="button" class="btn btn-outline-primary time-btn" data-hours="6">6h</button>
+                                <button type="button" class="btn btn-outline-primary time-btn active" data-hours="12">12h</button>
+                                <button type="button" class="btn btn-outline-primary time-btn" data-hours="24">24h</button>
+                                <button type="button" class="btn btn-outline-primary time-btn" data-hours="72">3 ngày</button>
+                                <button type="button" class="btn btn-outline-primary time-btn" data-hours="168">7 ngày</button>
+                            </div>
+                        </div>
+                        <!-- Chart Container -->
+                        <div id="sensorChart" style="min-height: 350px;"></div>
+                        <!-- No Data Message -->
+                        <div id="noChartData" class="text-center py-5" style="display: none;">
+                            <span class="fas fa-chart-area fa-3x text-muted mb-3"></span>
+                            <p class="text-muted">Chưa có dữ liệu đồ thị.<br>Bật "Ghi log đồ thị" cho các cảm biến để hiển thị.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Sensors -->
+            <div class="col-12 col-lg-4">
+                {% for sensor in sensors %}
+                <div class="sensor-item {% if 'chuyển động' in sensor.name|lower or 'motion' in sensor.name|lower %}motion{% elif 'nhiệt' in sensor.name|lower or 'temp' in sensor.name|lower %}temperature{% elif 'ẩm' in sensor.name|lower or 'humid' in sensor.name|lower %}humidity{% elif 'gas' in sensor.name|lower or 'khí' in sensor.name|lower %}gas{% elif 'ánh sáng' in sensor.name|lower or 'light' in sensor.name|lower %}light{% else %}temperature{% endif %}" id="sensor-card-{{ sensor.id }}" data-device-code="{{ sensor.device_code }}">
+                    <div class="sensor-header">
+                        <span class="device-code">{{ sensor.device_code|default:"---" }}</span>
+                        <div class="device-actions">
+                            <button type="button" class="btn-edit-device" onclick="openEditModal({{ sensor.id }})" title="Sửa thiết bị">
+                                <span class="fas fa-edit"></span>
+                            </button>
+                            <button type="button" class="btn-delete-device" onclick="confirmDelete({{ sensor.id }}, '{{ sensor.name }}')" title="Xóa thiết bị">
+                                <span class="fas fa-trash-alt"></span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="sensor-icon {% if 'chuyển động' in sensor.name|lower or 'motion' in sensor.name|lower %}motion{% elif 'nhiệt' in sensor.name|lower or 'temp' in sensor.name|lower %}temperature{% elif 'ẩm' in sensor.name|lower or 'humid' in sensor.name|lower %}humidity{% elif 'gas' in sensor.name|lower or 'khí' in sensor.name|lower %}gas{% elif 'ánh sáng' in sensor.name|lower or 'light' in sensor.name|lower %}light{% else %}temperature{% endif %} mr-3">
+                            {% if 'chuyển động' in sensor.name|lower or 'motion' in sensor.name|lower %}
+                            <span class="fas fa-running"></span>
+                            {% elif 'nhiệt' in sensor.name|lower or 'temp' in sensor.name|lower %}
+                            <span class="fas fa-thermometer-half"></span>
+                            {% elif 'ẩm' in sensor.name|lower or 'humid' in sensor.name|lower %}
+                            <span class="fas fa-tint"></span>
+                            {% elif 'gas' in sensor.name|lower or 'khí' in sensor.name|lower %}
+                            <span class="fas fa-fire"></span>
+                            {% elif 'ánh sáng' in sensor.name|lower or 'light' in sensor.name|lower %}
+                            <span class="fas fa-sun"></span>
+                            {% else %}
+                            <span class="fas fa-broadcast-tower"></span>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="sensor-label">{{ sensor.name }}</div>
+                            {% if 'chuyển động' in sensor.name|lower or 'motion' in sensor.name|lower %}
+                            <div class="sensor-value" id="sensor-value-{{ sensor.id }}" style="font-size: 1.1rem;">
+                                {% if sensor.value == '1' %}Có chuyển động{% else %}Không chuyển động{% endif %}
+                            </div>
+                            {% else %}
+                            <div>
+                                <span class="sensor-value" id="sensor-value-{{ sensor.id }}">{{ sensor.value }}</span>
+                                <span class="sensor-unit">{{ sensor.unit|default:"" }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="sensor-time" id="sensor-time-{{ sensor.id }}">
+                                Cập nhật lúc: {{ sensor.updated_at|date:"H:i d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="sensor-item temperature text-center py-4">
+                    <span class="fas fa-thermometer-empty fa-2x text-gray mb-2"></span>
+                    <p class="text-muted mb-0">Chưa có cảm biến nào</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Modal Thêm Thiết Bị -->
+        <div class="modal fade" id="addDeviceModal" tabindex="-1" role="dialog" aria-labelledby="addDeviceModal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body p-0">
+                        <div class="card border-light p-4">
+                            <button type="button" class="btn-close ml-auto" data-dismiss="modal" aria-label="Close"></button>
+                            <div class="card-header border-0 text-center pb-0">
+                                <h2 class="h4"><span class="fas fa-plus-circle mr-2 text-primary"></span>Thêm thiết bị mới</h2>
+                                <span class="text-muted">Điền thông tin thiết bị bên dưới</span>   
+                            </div>
+                            <div class="card-body">
+                                <form action="{% url 'add_device' %}" method="POST" class="mt-3">
+                                    {% csrf_token %}
+                                    <!-- Mã thiết bị -->
+                                    <div class="form-group mb-4">
+                                        <label for="device_code" class="font-weight-bold">Mã thiết bị <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="device_code" id="device_code" required>
+                                            <option value="">-- Chọn mã thiết bị --</option>
+                                            {% for code in available_codes %}
+                                            <option value="{{ code }}">{{ code|upper }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Mã này dùng để kết nối với thiết bị thực</small>
+                                    </div>
+                                    
+                                    <!-- Tên thiết bị -->
+                                    <div class="form-group mb-4">
+                                        <label for="device_name" class="font-weight-bold">Tên thiết bị <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><span class="fas fa-microchip"></span></span>
+                                            <input type="text" class="form-control" name="name" id="device_name" placeholder="VD: Đèn phòng khách, Cảm biến nhiệt độ..." required>
+                                        </div>  
+                                    </div>
+                                    
+                                    <!-- Loại thiết bị -->
+                                    <div class="form-group mb-4">
+                                        <label for="device_type" class="font-weight-bold">Loại thiết bị <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="device_type" id="device_type" required onchange="toggleUnitField()">
+                                            <option value="">-- Chọn loại thiết bị --</option>
+                                            <option value="relay">Relay (Bật/Tắt)</option>
+                                            <option value="sensor">Cảm biến</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Đơn vị (chỉ hiện khi chọn Sensor) -->
+                                    <div class="form-group mb-4" id="unitField" style="display: none;">
+                                        <label for="device_unit" class="font-weight-bold">Đơn vị đo</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><span class="fas fa-ruler"></span></span>
+                                            <input type="text" class="form-control" name="unit" id="device_unit" placeholder="VD: °C, %, ppm, lux...">
+                                        </div>
+                                        <small class="text-muted">Để trống nếu không cần đơn vị</small>
+                                    </div>
+                                    
+                                    <!-- Giá trị ban đầu (cho sensor) -->
+                                    <div class="form-group mb-4" id="valueField" style="display: none;">
+                                        <label for="device_value" class="font-weight-bold">Giá trị ban đầu</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><span class="fas fa-hashtag"></span></span>
+                                            <input type="text" class="form-control" name="value" id="device_value" placeholder="VD: 25.5, 60...">
+                                        </div>
+                                        <small class="text-muted">Để trống sẽ mặc định là 0</small>
+                                    </div>
+                                    
+                                    <!-- Ghi log đồ thị (chỉ hiện với sensor) -->
+                                    <div class="form-group mb-4" id="loggingField" style="display: none;">
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" class="form-check-input" name="enable_logging" id="enable_logging" value="1">
+                                            <label class="form-check-label font-weight-bold" for="enable_logging">
+                                                <span class="fas fa-chart-line mr-1"></span> Ghi log đồ thị
+                                            </label>
+                                        </div>
+                                        <small class="text-muted">Bật để hiển thị cảm biến trên đồ thị dashboard</small>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mt-4">
+                                        <button type="button" class="btn btn-outline-gray" data-dismiss="modal">
+                                            <span class="fas fa-times mr-1"></span> Hủy
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="fas fa-plus mr-1"></span> Thêm thiết bị
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Modal Thêm -->
+
+        <!-- Modal Xác nhận Xóa -->
+        <div class="modal fade" id="deleteDeviceModal" tabindex="-1" role="dialog" aria-labelledby="deleteDeviceModal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><span class="fas fa-exclamation-triangle mr-2"></span>Xác nhận xóa</h5>
+                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <span class="fas fa-trash-alt fa-3x text-danger mb-3"></span>
+                        <h5>Bạn có chắc muốn xóa thiết bị?</h5>
+                        <p class="text-muted mb-0">Thiết bị: <strong id="deleteDeviceName"></strong></p>
+                        <p class="text-muted small">Hành động này không thể hoàn tác!</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                            <span class="fas fa-times mr-1"></span> Hủy
+                        </button>
+                        <form id="deleteDeviceForm" method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <span class="fas fa-trash-alt mr-1"></span> Xóa thiết bị
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Modal Xóa -->
+
+        <!-- Modal Chỉnh sửa Thiết Bị -->
+        <div class="modal fade" id="editDeviceModal" tabindex="-1" role="dialog" aria-labelledby="editDeviceModal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body p-0">
+                        <div class="card border-light p-4">
+                            <button type="button" class="btn-close ml-auto" data-dismiss="modal" aria-label="Close"></button>
+                            <div class="card-header border-0 text-center pb-0">
+                                <h2 class="h4"><span class="fas fa-edit mr-2 text-primary"></span>Chỉnh sửa thiết bị</h2>
+                                <span class="text-muted">Cập nhật thông tin thiết bị</span>   
+                            </div>
+                            <div class="card-body">
+                                <form id="editDeviceForm" method="POST" class="mt-3">
+                                    {% csrf_token %}
+                                    <!-- Mã thiết bị -->
+                                    <div class="form-group mb-4">
+                                        <label for="edit_device_code" class="font-weight-bold">Mã thiết bị <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="device_code" id="edit_device_code" required>
+                                            <!-- Options sẽ được load bằng JS -->
+                                        </select>
+                                        <small class="text-muted">Mã này dùng để kết nối với thiết bị thực</small>
+                                    </div>
+                                    
+                                    <!-- Tên thiết bị -->
+                                    <div class="form-group mb-4">
+                                        <label for="edit_device_name" class="font-weight-bold">Tên thiết bị <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><span class="fas fa-microchip"></span></span>
+                                            <input type="text" class="form-control" name="name" id="edit_device_name" required>
+                                        </div>  
+                                    </div>
+                                    
+                                    <!-- Đơn vị (chỉ hiện với sensor) -->
+                                    <div class="form-group mb-4" id="edit_unitField" style="display: none;">
+                                        <label for="edit_device_unit" class="font-weight-bold">Đơn vị đo</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><span class="fas fa-ruler"></span></span>
+                                            <input type="text" class="form-control" name="unit" id="edit_device_unit" placeholder="VD: °C, %, ppm...">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Ghi log đồ thị (chỉ hiện với sensor) -->
+                                    <div class="form-group mb-4" id="edit_loggingField" style="display: none;">
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" class="form-check-input" name="enable_logging" id="edit_enable_logging" value="1">
+                                            <label class="form-check-label font-weight-bold" for="edit_enable_logging">
+                                                <span class="fas fa-chart-line mr-1"></span> Ghi log đồ thị
+                                            </label>
+                                        </div>
+                                        <small class="text-muted">Bật để hiển thị cảm biến trên đồ thị dashboard</small>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mt-4">
+                                        <button type="button" class="btn btn-outline-gray" data-dismiss="modal">
+                                            <span class="fas fa-times mr-1"></span> Hủy
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="fas fa-save mr-1"></span> Lưu thay đổi
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Modal Edit -->
+
+        {% include 'includes/footer.html' %}
+
+    </main>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+// Toggle hiển thị field đơn vị khi chọn loại thiết bị
+function toggleUnitField() {
+    const deviceType = document.getElementById('device_type').value;
+    const unitField = document.getElementById('unitField');
+    const valueField = document.getElementById('valueField');
+    const loggingField = document.getElementById('loggingField');
+    
+    if (deviceType === 'sensor') {
+        unitField.style.display = 'block';
+        valueField.style.display = 'block';
+        loggingField.style.display = 'block';
+    } else {
+        unitField.style.display = 'none';
+        valueField.style.display = 'none';
+        loggingField.style.display = 'none';
+    }
+}
+
+function toggleRelay(deviceId) {
+    fetch(`/smart-home/toggle/${deviceId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const status = document.getElementById(`relay-status-${deviceId}`);
+            
+            if (data.is_on) {
+                status.textContent = 'BẬT';
+                status.classList.remove('off');
+                status.classList.add('on');
+            } else {
+                status.textContent = 'TẮT';
+                status.classList.remove('on');
+                status.classList.add('off');
+            }
+            
+            // Show notification
+            const notyf = new Notyf({
+                position: { x: 'right', y: 'top' },
+                types: [{
+                    type: 'success',
+                    background: '#05A677',
+                    icon: { className: 'fas fa-check', tagName: 'span', color: '#fff' }
+                }]
+            });
+            notyf.open({
+                type: 'success',
+                message: `Đã ${data.is_on ? 'BẬT' : 'TẮT'} thiết bị`
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Revert checkbox state
+        const checkbox = document.getElementById(`relay-${deviceId}`);
+        checkbox.checked = !checkbox.checked;
+        
+        const notyf = new Notyf({
+            position: { x: 'right', y: 'top' },
+            types: [{
+                type: 'error',
+                background: '#FA5252',
+                icon: { className: 'fas fa-times', tagName: 'span', color: '#fff' }
+            }]
+        });
+        notyf.open({
+            type: 'error',
+            message: 'Có lỗi xảy ra!'
+        });
+    });
+}
+
+// Xác nhận xóa thiết bị
+function confirmDelete(deviceId, deviceName) {
+    document.getElementById('deleteDeviceName').textContent = deviceName;
+    document.getElementById('deleteDeviceForm').action = `/smart-home/delete/${deviceId}/`;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('deleteDeviceModal'));
+    modal.show();
+}
+
+// Mở modal chỉnh sửa thiết bị
+function openEditModal(deviceId) {
+    fetch(`/smart-home/device/${deviceId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const device = data.device;
+                const availableCodes = data.available_codes;
+                
+                // Update form action
+                document.getElementById('editDeviceForm').action = `/smart-home/edit/${deviceId}/`;
+                
+                // Update device code dropdown
+                const codeSelect = document.getElementById('edit_device_code');
+                codeSelect.innerHTML = '';
+                
+                // Add current code first (selected)
+                if (device.device_code) {
+                    const currentOption = document.createElement('option');
+                    currentOption.value = device.device_code;
+                    currentOption.textContent = device.device_code.toUpperCase();
+                    currentOption.selected = true;
+                    codeSelect.appendChild(currentOption);
+                }
+                
+                // Add available codes
+                availableCodes.forEach(code => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = code.toUpperCase();
+                    codeSelect.appendChild(option);
+                });
+                
+                // Update name
+                document.getElementById('edit_device_name').value = device.name;
+                
+                // Show/hide unit field and logging field based on device type
+                const unitField = document.getElementById('edit_unitField');
+                const loggingField = document.getElementById('edit_loggingField');
+                if (device.device_type === 'sensor') {
+                    unitField.style.display = 'block';
+                    loggingField.style.display = 'block';
+                    document.getElementById('edit_device_unit').value = device.unit;
+                    document.getElementById('edit_enable_logging').checked = device.enable_logging;
+                } else {
+                    unitField.style.display = 'none';
+                    loggingField.style.display = 'none';
+                }
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editDeviceModal'));
+                modal.show();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const notyf = new Notyf({
+                position: { x: 'right', y: 'top' },
+                types: [{
+                    type: 'error',
+                    background: '#FA5252',
+                    icon: { className: 'fas fa-times', tagName: 'span', color: '#fff' }
+                }]
+            });
+            notyf.open({
+                type: 'error',
+                message: 'Không thể tải thông tin thiết bị!'
+            });
+        });
+}
+
+// ============ APEX CHART ============
+let sensorChart = null;
+let currentHours = 12;
+
+// Màu sắc cho các sensor
+const chartColors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#546E7A', '#26a69a', '#D10CE8'];
+
+// Khởi tạo chart
+function initChart() {
+    const options = {
+        series: [],
+        chart: {
+            type: 'line',
+            height: 350,
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800
+            },
+            toolbar: {
+                show: true,
+                tools: {
+                    download: true,
+                    selection: true,
+                    zoom: true,
+                    zoomin: true,
+                    zoomout: true,
+                    pan: true,
+                    reset: true
+                }
+            },
+            zoom: {
+                enabled: true
+            },
+            locales: [{
+                name: 'vi',
+                options: {
+                    months: ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'],
+                    shortMonths: ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'],
+                    days: ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'],
+                    shortDays: ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'],
+                    toolbar: {
+                        download: 'Tải xuống SVG',
+                        selection: 'Chọn vùng',
+                        selectionZoom: 'Zoom vùng chọn',
+                        zoomIn: 'Phóng to',
+                        zoomOut: 'Thu nhỏ',
+                        pan: 'Di chuyển',
+                        reset: 'Reset zoom'
+                    }
+                }
+            }],
+            defaultLocale: 'vi'
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        colors: chartColors,
+        xaxis: {
+            type: 'datetime',
+            labels: {
+                datetimeUTC: false,
+                format: 'HH:mm',
+                style: {
+                    fontSize: '11px'
+                }
+            },
+            title: {
+                text: 'Thời gian',
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 600
+                }
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Giá trị đo',
+                style: {
+                    fontSize: '12px',
+                    fontWeight: 600
+                }
+            },
+            labels: {
+                formatter: function(val) {
+                    return val !== null ? val.toFixed(1) : '';
+                }
+            }
+        },
+        legend: {
+            show: true,
+            position: 'bottom',
+            horizontalAlign: 'center',
+            fontSize: '12px',
+            markers: {
+                width: 10,
+                height: 10,
+                radius: 5
+            }
+        },
+        tooltip: {
+            shared: true,
+            intersect: false,
+            x: {
+                format: 'dd/MM/yyyy HH:mm'
+            },
+            y: {
+                formatter: function(val, opts) {
+                    if (val === null || val === undefined) return '';
+                    return val.toFixed(2);
+                }
+            }
+        },
+        grid: {
+            borderColor: '#e7e7e7',
+            row: {
+                colors: ['#f3f3f3', 'transparent'],
+                opacity: 0.5
+            }
+        },
+        noData: {
+            text: 'Đang tải dữ liệu...',
+            align: 'center',
+            verticalAlign: 'middle',
+            style: {
+                fontSize: '14px',
+                color: '#6B7280'
+            }
+        }
+    };
+    
+    sensorChart = new ApexCharts(document.querySelector("#sensorChart"), options);
+    sensorChart.render();
+}
+
+// Load dữ liệu chart
+function loadChartData(hours) {
+    currentHours = hours;
+    
+    // Update active button
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (parseInt(btn.dataset.hours) === hours) {
+            btn.classList.add('active');
+        }
+    });
+    
+    fetch(`/smart-home/chart-data/?hours=${hours}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.series.length > 0) {
+                document.getElementById('sensorChart').style.display = 'block';
+                document.getElementById('noChartData').style.display = 'none';
+                
+                // Format series cho ApexCharts
+                const formattedSeries = data.series.map((s, index) => ({
+                    name: `${s.name} (${s.unit || 'N/A'})`,
+                    data: s.data
+                }));
+                
+                sensorChart.updateSeries(formattedSeries);
+                
+                // Update xaxis range nếu cần
+                const now = new Date().getTime();
+                const startTime = now - (hours * 60 * 60 * 1000);
+                sensorChart.updateOptions({
+                    xaxis: {
+                        min: startTime,
+                        max: now
+                    }
+                });
+            } else {
+                document.getElementById('sensorChart').style.display = 'none';
+                document.getElementById('noChartData').style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading chart data:', error);
+            document.getElementById('sensorChart').style.display = 'none';
+            document.getElementById('noChartData').style.display = 'block';
+        });
+}
+
+// Khởi tạo khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    // Init chart
+    initChart();
+    
+    // Load data mặc định (12h)
+    loadChartData(12);
+    
+    // Bind click events cho time buttons
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            loadChartData(parseInt(this.dataset.hours));
+        });
+    });
+    
+    // Auto refresh mỗi 30 giây
+    setInterval(() => {
+        loadChartData(currentHours);
+    }, 30000);
+    
+    // ============ WEBSOCKET REALTIME ============
+    initWebSocket();
+});
+
+// WebSocket cho realtime updates
+let wsSocket = null;
+let wsReconnectAttempts = 0;
+const wsMaxReconnect = 10;
+
+function initWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/dashboard/`;
+    
+    console.log('Connecting WebSocket:', wsUrl);
+    wsSocket = new WebSocket(wsUrl);
+    
+    wsSocket.onopen = function(e) {
+        console.log('✅ WebSocket connected');
+        wsReconnectAttempts = 0;
+        showWsStatus(true);
+    };
+    
+    wsSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        console.log('📨 WebSocket message:', data);
+        handleWsMessage(data);
+    };
+    
+    wsSocket.onclose = function(e) {
+        console.log('❌ WebSocket closed:', e.code);
+        showWsStatus(false);
+        
+        // Auto reconnect
+        if (wsReconnectAttempts < wsMaxReconnect) {
+            wsReconnectAttempts++;
+            const delay = Math.min(1000 * wsReconnectAttempts, 10000);
+            console.log(`Reconnecting in ${delay/1000}s...`);
+            setTimeout(initWebSocket, delay);
+        }
+    };
+    
+    wsSocket.onerror = function(e) {
+        console.error('WebSocket error:', e);
+    };
+}
+
+function showWsStatus(connected) {
+    // Có thể thêm indicator trên UI nếu cần
+}
+
+function handleWsMessage(data) {
+    console.log('========== WS MESSAGE RECEIVED ==========');
+    console.log('📥 Type:', data.type);
+    console.log('📥 Full data:', JSON.stringify(data, null, 2));
+    
+    const now = new Date();
+    const timeStr = now.toLocaleString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+    
+    switch (data.type) {
+        case 'device_update':
+            console.log('🔌 Processing device_update:', data.device_code, data.status);
+            updateRelayFromWs(data.device_code, data.status, timeStr);
+            break;
+        case 'sensor_update':
+            console.log('📊 Processing sensor_update:', data.device_code, data.value);
+            updateSensorFromWs(data.device_code, data.value, timeStr);
+            break;
+        case 'initial_data':
+            console.log('📋 Received initial_data - relays:', data.devices?.relays?.length, 'sensors:', data.devices?.sensors?.length);
+            break;
+        default:
+            console.log('⚠️ Unknown message type:', data.type);
+    }
+    console.log('=========================================');
+}
+
+function updateRelayFromWs(deviceCode, status, timeStr) {
+    console.log('🔍 [updateRelayFromWs] Looking for device:', deviceCode);
+    
+    // Tìm relay card theo device_code
+    const card = document.querySelector(`[data-device-code="${deviceCode}"].relay-item`);
+    console.log('🔍 [updateRelayFromWs] Card found:', card);
+    
+    if (!card) {
+        console.log('❌ [updateRelayFromWs] Card NOT found! Checking all relay cards...');
+        const allRelays = document.querySelectorAll('.relay-item');
+        console.log('📋 All relay cards:', allRelays.length);
+        allRelays.forEach((el, i) => {
+            console.log(`   ${i}: id=${el.id}, data-device-code=${el.getAttribute('data-device-code')}`);
+        });
+        return;
+    }
+    
+    const relayId = card.id.replace('relay-card-', '');
+    console.log('🔍 [updateRelayFromWs] Relay ID:', relayId);
+    
+    const checkbox = document.getElementById(`relay-${relayId}`);
+    const statusEl = document.getElementById(`relay-status-${relayId}`);
+    const timeEl = document.getElementById(`relay-time-${relayId}`);
+    
+    console.log('🔍 [updateRelayFromWs] Elements:', {
+        checkbox: !!checkbox,
+        statusEl: !!statusEl,
+        timeEl: !!timeEl
+    });
+    
+    const isOn = status === true || status === 'on' || status === '1' || status === 1;
+    console.log('🔍 [updateRelayFromWs] isOn:', isOn, 'from status:', status, typeof status);
+    
+    if (checkbox) checkbox.checked = isOn;
+    
+    if (statusEl) {
+        statusEl.textContent = isOn ? 'BẬT' : 'TẮT';
+        statusEl.classList.remove('on', 'off');
+        statusEl.classList.add(isOn ? 'on' : 'off');
+    }
+    
+    if (timeEl) {
+        timeEl.innerHTML = `<span class="fas fa-clock mr-1"></span>Cập nhật: ${timeStr}`;
+    }
+    
+    // Animation
+    card.style.transform = 'scale(1.02)';
+    setTimeout(() => card.style.transform = 'scale(1)', 200);
+    
+    console.log('✅ [updateRelayFromWs] Updated successfully!');
+}
+
+function updateSensorFromWs(deviceCode, value, timeStr) {
+    console.log('🔍 [updateSensorFromWs] Looking for device:', deviceCode);
+    
+    // Tìm sensor card theo device_code
+    const card = document.querySelector(`[data-device-code="${deviceCode}"].sensor-item`);
+    console.log('🔍 [updateSensorFromWs] Card found:', card);
+    
+    if (!card) {
+        console.log('❌ [updateSensorFromWs] Card NOT found! Checking all sensor cards...');
+        const allSensors = document.querySelectorAll('.sensor-item');
+        console.log('📋 All sensor cards:', allSensors.length);
+        allSensors.forEach((el, i) => {
+            console.log(`   ${i}: id=${el.id}, data-device-code=${el.getAttribute('data-device-code')}`);
+        });
+        return;
+    }
+    
+    const sensorId = card.id.replace('sensor-card-', '');
+    console.log('🔍 [updateSensorFromWs] Sensor ID:', sensorId);
+    
+    const valueEl = document.getElementById(`sensor-value-${sensorId}`);
+    const timeEl = document.getElementById(`sensor-time-${sensorId}`);
+    
+    console.log('🔍 [updateSensorFromWs] Elements:', {
+        valueEl: !!valueEl,
+        timeEl: !!timeEl
+    });
+    
+    if (valueEl) {
+        // Check if motion sensor
+        if (card.classList.contains('motion')) {
+            valueEl.textContent = (value === '1' || value === 1) ? 'Có chuyển động' : 'Không chuyển động';
+        } else {
+            valueEl.textContent = value;
+        }
+        // Animation
+        valueEl.style.transform = 'scale(1.1)';
+        valueEl.style.color = '#05A677';
+        setTimeout(() => {
+            valueEl.style.transform = 'scale(1)';
+            valueEl.style.color = '';
+        }, 300);
+    }
+    
+    if (timeEl) {
+        timeEl.textContent = `Cập nhật lúc: ${timeStr}`;
+    }
+    
+    console.log('✅ [updateSensorFromWs] Updated successfully!');
+}
+
+// Gửi lệnh qua WebSocket (thay vì fetch)
+function toggleRelayWs(deviceCode, newStatus) {
+    if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
+        wsSocket.send(JSON.stringify({
+            action: 'control_device',
+            device_code: deviceCode,
+            value: newStatus
+        }));
+    }
+}
+</script>
+{% endblock javascripts %}

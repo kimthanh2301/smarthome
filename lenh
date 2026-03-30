@@ -1,0 +1,1 @@
+cd /home/ubuntu/Desktop/smart_home && python3 manage.py runsslserver 0.0.0.0:8443 --certificate ssl/cert.pem --key ssl/key.pem

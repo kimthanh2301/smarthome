@@ -1,8 +1,7 @@
 {% extends "layouts/base-fullscreen.html" %}
 
-{% block title %} Register {% endblock %} 
+{% block title %} Đăng ký {% endblock %} 
 
-<!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block body_class %} bg-soft {% endblock body_class %}
@@ -10,8 +9,6 @@
 {% block content %}
 
     <main>
-
-        <!-- Section -->
         <section class="vh-lg-100 d-flex align-items-center">
             <div class="container">
                 <div class="row justify-content-center form-bg-image" data-background="/static/assets/img/illustrations/signin.svg">
@@ -19,67 +16,59 @@
                         <div class="signin-inner my-3 my-lg-0 bg-white shadow-soft border rounded border-light p-4 p-lg-5 w-100 fmxw-500">
 
                             <div class="text-center text-md-center mb-4 mt-md-0">
-                                <h1 class="mb-0 h3">
-                                    Django Volt - Sign UP
+                                <h1 class="mb-2 h3">
+                                    <span class="fas fa-home text-primary"></span> Smart Home
                                 </h1>
-                                <br />
+                                <p class="text-muted">Hệ thống điều khiển nhà thông minh</p>
+                                <hr>
                                 <p>
                                     {% if msg %}
                                         {{ msg | safe }}
                                     {% else %}
-                                        Add your credentials
+                                        Tạo tài khoản mới
                                     {% endif %}                                     
                                 </p>    
                             </div>
                             
                             {% if success %}
 
-                                <a href="{% url 'login' %}" class="btn btn-block btn-primary">Sign IN</a>
+                                <a href="{% url 'login' %}" class="btn btn-block btn-primary">Đăng nhập ngay</a>
 
                             {% else %}
 
                                 <form method="post" action="">
-                                
                                     {% csrf_token %}
 
-                                    <!-- Form -->
                                     <div class="form-group mb-4">
-                                        <label for="email">Username</label>
+                                        <label for="email">Tên đăng nhập</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="basic-addon3"><span class="fas fa-user-shield"></span></span>
                                             {{ form.username }}
                                         </div>
                                         <span class="text-error">{{ form.username.errors }}</span>
                                     </div>
-                                    <!-- End of Form -->
 
-                                    <!-- Form -->
                                     <div class="form-group mb-4">
-                                        <label for="email">Your Email</label>
+                                        <label for="email">Email</label>
                                         <div class="input-group">
                                             <span class="input-group-text" id="basic-addon3"><span class="fas fa-envelope"></span></span>
                                             {{ form.email }}
                                         </div>
                                         <span class="text-error">{{ form.email.errors }}</span>
                                     </div>
-                                    <!-- End of Form -->
 
                                     <div class="form-group">
-
-                                        <!-- Form -->
                                         <div class="form-group mb-4">
-                                            <label for="password">Password</label>
+                                            <label for="password">Mật khẩu</label>
                                             <div class="input-group">
                                                 <span class="input-group-text" id="basic-addon4"><span class="fas fa-unlock-alt"></span></span>
                                                 {{ form.password1 }}
                                             </div>  
                                             <span class="text-error">{{ form.password1.errors }}</span>
                                         </div>
-                                        <!-- End of Form -->
 
-                                        <!-- Form -->
                                         <div class="form-group mb-4">
-                                            <label for="password">Password Check</label>
+                                            <label for="password">Xác nhận mật khẩu</label>
                                             <div class="input-group">
                                                 <span class="input-group-text" id="basic-addon4"><span class="fas fa-unlock-alt"></span></span>
                                                 {{ form.password2 }}
@@ -91,25 +80,23 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="" id="defaultCheck5">
                                                 <label class="form-check-label" for="defaultCheck5">
-                                                Agree terms
+                                                Đồng ý điều khoản
                                                 </label>
                                             </div>
                                             <div class="form-check">
-                                                <a href="{% url 'login' %}" class="small text-right">Login</a>
+                                                <a href="{% url 'login' %}" class="small text-right">Đã có tài khoản?</a>
                                             </div>
                                         </div>
                                         
                                     </div>
-                                    <button type="submit" name="register" class="btn btn-block btn-primary">Sign IN</button>
+                                    <button type="submit" name="register" class="btn btn-block btn-primary">Đăng ký</button>
                                 </form>
 
                             {% endif %}
 
-
                             <div class="d-flex justify-content-center align-items-center mt-4">
-                                <span class="font-weight-normal">
-                                    &copy; <a  href="https://themesberg.com" target="_blank">Themesberg</a> 
-                                    - coded by <a target="_blank" href="https://appseed.us">AppSeed</a>
+                                <span class="font-weight-normal text-muted">
+                                    Đồ án tốt nghiệp &copy; 2025
                                 </span>
                             </div>
                         </div>
@@ -121,5 +108,4 @@
 
 {% endblock content %}
 
-<!-- Specific Page JS goes HERE  -->
 {% block javascripts %}{% endblock javascripts %}

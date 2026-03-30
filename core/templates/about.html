@@ -1,0 +1,637 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Giới thiệu đồ án {% endblock %} 
+
+{% block stylesheets %}
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    .feature-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 24px;
+    }
+    .tech-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        margin: 4px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .section-title {
+        border-left: 4px solid #667eea;
+        padding-left: 15px;
+        margin-bottom: 20px;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 25px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 5px;
+        bottom: 5px;
+        width: 2px;
+        background: #667eea;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 15px;
+        padding-left: 15px;
+    }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -21px;
+        top: 6px;
+        width: 10px;
+        height: 10px;
+        background: #667eea;
+        border-radius: 50%;
+    }
+    .code-block {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 8px;
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        overflow-x: auto;
+    }
+    .code-block pre {
+        margin: 0;
+        white-space: pre-wrap;
+    }
+    .db-table {
+        font-size: 13px;
+    }
+    .db-table th {
+        background: #f8fafc;
+        font-weight: 600;
+    }
+    .db-table code {
+        background: #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    .arch-box {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        border: 2px solid #e2e8f0;
+    }
+    .arch-arrow {
+        color: #667eea;
+        font-size: 24px;
+    }
+    .highlight-box {
+        background: linear-gradient(120deg, #ffeaa7 0%, #ffeaa7 100%);
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+    <main class="content">
+
+        {% include 'includes/navigation.html' %}
+
+<div class="py-4">
+    <!-- Hero Section -->
+    <div class="about-hero text-center">
+        <h1 class="display-5 mb-2">
+            <i class="fas fa-home"></i> Smart Home
+        </h1>
+        <p class="lead mb-2">Hệ thống điều khiển nhà thông minh với IoT và AI</p>
+        <p class="mb-0 opacity-75">
+            <i class="fas fa-graduation-cap mr-2"></i> Đồ án tốt nghiệp © 2025
+        </p>
+    </div>
+
+    <!-- Tổng quan -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-info-circle text-primary mr-2"></i>Tổng quan</h4>
+            <p>
+                <strong>Smart Home</strong> là hệ thống điều khiển nhà thông minh hoàn chỉnh, kết hợp 
+                <span class="highlight-box">ESP32</span> và <span class="highlight-box">Django</span> 
+                để tạo giải pháp IoT thực tế:
+            </p>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i>Điều khiển thiết bị từ xa qua web</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i>Giám sát cảm biến realtime</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i>Nhận diện khuôn mặt mở cửa</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i>Cảnh báo khẩn cấp gas/cháy</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i>Tự động bật đèn khi có người</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success mr-2"></i>Giao thức MQTT chuẩn IoT</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tính năng -->
+    <h4 class="section-title"><i class="fas fa-star text-warning mr-2"></i>Tính năng chính</h4>
+    <div class="row mb-4">
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card feature-card">
+                <div class="card-body text-center p-3">
+                    <div class="feature-icon bg-primary text-white"><i class="fas fa-toggle-on"></i></div>
+                    <h6>Điều khiển thiết bị</h6>
+                    <small class="text-muted">Bật/tắt đèn, quạt, cửa từ xa. Đồng bộ realtime.</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card feature-card">
+                <div class="card-body text-center p-3">
+                    <div class="feature-icon bg-success text-white"><i class="fas fa-chart-line"></i></div>
+                    <h6>Giám sát cảm biến</h6>
+                    <small class="text-muted">Nhiệt độ, độ ẩm, khí gas, lửa với biểu đồ.</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card feature-card">
+                <div class="card-body text-center p-3">
+                    <div class="feature-icon bg-info text-white"><i class="fas fa-user-check"></i></div>
+                    <h6>Face Recognition</h6>
+                    <small class="text-muted">AI nhận diện, tự động mở cửa 5 giây.</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card feature-card">
+                <div class="card-body text-center p-3">
+                    <div class="feature-icon bg-danger text-white"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h6>Chế độ khẩn cấp</h6>
+                    <small class="text-muted">Tự động bật tất cả khi phát hiện gas/cháy.</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card feature-card">
+                <div class="card-body text-center p-3">
+                    <div class="feature-icon bg-warning text-white"><i class="fas fa-walking"></i></div>
+                    <h6>Phát hiện chuyển động</h6>
+                    <small class="text-muted">PIR phát hiện người, bật đèn 30 giây.</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card feature-card">
+                <div class="card-body text-center p-3">
+                    <div class="feature-icon bg-secondary text-white"><i class="fas fa-broadcast-tower"></i></div>
+                    <h6>MQTT Protocol</h6>
+                    <small class="text-muted">Giao thức IoT chuẩn, độ trễ thấp.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kiến trúc hệ thống -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-project-diagram text-primary mr-2"></i>Kiến trúc hệ thống</h4>
+            <div class="row align-items-center text-center py-3">
+                <div class="col">
+                    <div class="arch-box">
+                        <i class="fas fa-microchip fa-2x text-success mb-2"></i>
+                        <div><strong>ESP32</strong></div>
+                        <small class="text-muted">Phần cứng IoT</small>
+                    </div>
+                </div>
+                <div class="col-auto"><i class="fas fa-arrows-alt-h arch-arrow"></i></div>
+                <div class="col">
+                    <div class="arch-box">
+                        <i class="fas fa-broadcast-tower fa-2x text-info mb-2"></i>
+                        <div><strong>MQTT Broker</strong></div>
+                        <small class="text-muted">Message Queue</small>
+                    </div>
+                </div>
+                <div class="col-auto"><i class="fas fa-arrows-alt-h arch-arrow"></i></div>
+                <div class="col">
+                    <div class="arch-box">
+                        <i class="fab fa-python fa-2x text-warning mb-2"></i>
+                        <div><strong>Django</strong></div>
+                        <small class="text-muted">Backend + WebSocket</small>
+                    </div>
+                </div>
+                <div class="col-auto"><i class="fas fa-arrows-alt-h arch-arrow"></i></div>
+                <div class="col">
+                    <div class="arch-box">
+                        <i class="fas fa-desktop fa-2x text-primary mb-2"></i>
+                        <div><strong>Dashboard</strong></div>
+                        <small class="text-muted">Giao diện Web</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cơ sở dữ liệu -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-database text-primary mr-2"></i>Cơ sở dữ liệu (Database Schema)</h4>
+            <p class="text-muted mb-3">Hệ thống sử dụng SQLite/PostgreSQL với 7 bảng chính:</p>
+            
+            <!-- Profile -->
+            <div class="mb-4">
+                <h5 class="text-primary"><i class="fas fa-user mr-2"></i>1. Profile (Hồ sơ người dùng)</h5>
+                <p class="text-muted small">Mở rộng User mặc định của Django, lưu thông tin cá nhân và API Key</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered db-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="25%">Trường</th>
+                                <th width="20%">Kiểu dữ liệu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>id</code></td><td>Integer (PK)</td><td>Khóa chính tự tăng</td></tr>
+                            <tr><td><code>user</code></td><td>ForeignKey → User</td><td>Liên kết 1-1 với User Django</td></tr>
+                            <tr><td><code>avatar</code></td><td>ImageField</td><td>Ảnh đại diện</td></tr>
+                            <tr><td><code>birthday</code></td><td>DateField</td><td>Ngày sinh</td></tr>
+                            <tr><td><code>gender</code></td><td>SmallInteger</td><td>Giới tính (1=Nam, 2=Nữ)</td></tr>
+                            <tr><td><code>phone</code></td><td>CharField(32)</td><td>Số điện thoại</td></tr>
+                            <tr><td><code>address</code></td><td>CharField(255)</td><td>Địa chỉ</td></tr>
+                            <tr class="table-warning"><td><code>api_key</code></td><td>CharField(64)</td><td><strong>API Key để kết nối ESP32 qua MQTT</strong></td></tr>
+                            <tr><td><code>created_at</code></td><td>DateTime</td><td>Ngày tạo</td></tr>
+                            <tr><td><code>updated_at</code></td><td>DateTime</td><td>Ngày cập nhật</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Device -->
+            <div class="mb-4">
+                <h5 class="text-success"><i class="fas fa-microchip mr-2"></i>2. Device (Thiết bị)</h5>
+                <p class="text-muted small">Lưu thông tin thiết bị smart home: Relay (bật/tắt) và Sensor (cảm biến)</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered db-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="25%">Trường</th>
+                                <th width="20%">Kiểu dữ liệu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>id</code></td><td>Integer (PK)</td><td>Khóa chính</td></tr>
+                            <tr><td><code>user</code></td><td>ForeignKey → User</td><td>Chủ sở hữu thiết bị</td></tr>
+                            <tr class="table-success"><td><code>device_code</code></td><td>CharField(10)</td><td><strong>Mã thiết bị: v1, v2, v3...</strong> (Unique per user)</td></tr>
+                            <tr><td><code>name</code></td><td>CharField(100)</td><td>Tên thiết bị (VD: Đèn phòng khách)</td></tr>
+                            <tr class="table-info"><td><code>device_type</code></td><td>CharField(20)</td><td><strong>relay</strong> (bật/tắt) | <strong>sensor</strong> (cảm biến)</td></tr>
+                            <tr><td><code>value</code></td><td>CharField(50)</td><td>Relay: 0/1 | Sensor: giá trị đo</td></tr>
+                            <tr><td><code>unit</code></td><td>CharField(20)</td><td>Đơn vị: °C, %, ppm...</td></tr>
+                            <tr><td><code>is_online</code></td><td>Boolean</td><td>Trạng thái online/offline</td></tr>
+                            <tr><td><code>enable_logging</code></td><td>Boolean</td><td>Bật ghi log để vẽ đồ thị</td></tr>
+                            <tr><td><code>created_at</code></td><td>DateTime</td><td>Ngày tạo</td></tr>
+                            <tr><td><code>updated_at</code></td><td>DateTime</td><td>Ngày cập nhật</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SensorLog -->
+            <div class="mb-4">
+                <h5 class="text-info"><i class="fas fa-chart-area mr-2"></i>3. SensorLog (Lịch sử cảm biến)</h5>
+                <p class="text-muted small">Lưu trữ giá trị cảm biến theo thời gian để vẽ biểu đồ (mỗi 5 phút)</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered db-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="25%">Trường</th>
+                                <th width="20%">Kiểu dữ liệu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>id</code></td><td>Integer (PK)</td><td>Khóa chính</td></tr>
+                            <tr><td><code>device</code></td><td>ForeignKey → Device</td><td>Thiết bị cảm biến</td></tr>
+                            <tr class="table-info"><td><code>value</code></td><td>Float</td><td><strong>Giá trị đo được</strong> (làm tròn 1 chữ số thập phân)</td></tr>
+                            <tr><td><code>timestamp</code></td><td>DateTime</td><td>Thời điểm ghi nhận</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FaceUser -->
+            <div class="mb-4">
+                <h5 class="text-warning"><i class="fas fa-user-circle mr-2"></i>4. FaceUser (Người dùng Face ID)</h5>
+                <p class="text-muted small">Người đăng ký nhận diện khuôn mặt để mở cửa</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered db-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="25%">Trường</th>
+                                <th width="20%">Kiểu dữ liệu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>id</code></td><td>Integer (PK)</td><td>Khóa chính</td></tr>
+                            <tr class="table-warning"><td><code>user_code</code></td><td>CharField(50)</td><td><strong>Mã người dùng</strong> (Unique)</td></tr>
+                            <tr><td><code>name</code></td><td>CharField(100)</td><td>Họ tên</td></tr>
+                            <tr><td><code>owner</code></td><td>ForeignKey → User</td><td>Chủ nhà (quản lý)</td></tr>
+                            <tr><td><code>is_active</code></td><td>Boolean</td><td>Đang hoạt động</td></tr>
+                            <tr><td><code>created_at</code></td><td>DateTime</td><td>Ngày tạo</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FaceImage -->
+            <div class="mb-4">
+                <h5 class="text-secondary"><i class="fas fa-images mr-2"></i>5. FaceImage (Ảnh khuôn mặt)</h5>
+                <p class="text-muted small">Lưu đường dẫn ảnh khuôn mặt của mỗi người dùng</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered db-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="25%">Trường</th>
+                                <th width="20%">Kiểu dữ liệu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>id</code></td><td>Integer (PK)</td><td>Khóa chính</td></tr>
+                            <tr><td><code>face_user</code></td><td>ForeignKey → FaceUser</td><td>Người dùng Face ID</td></tr>
+                            <tr><td><code>image_path</code></td><td>CharField(500)</td><td>Đường dẫn file ảnh</td></tr>
+                            <tr><td><code>created_at</code></td><td>DateTime</td><td>Ngày tạo</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- AttendanceLog -->
+            <div class="mb-4">
+                <h5 class="text-danger"><i class="fas fa-history mr-2"></i>6. AttendanceLog (Lịch sử nhận diện)</h5>
+                <p class="text-muted small">Ghi lại mỗi lần nhận diện thành công (mở cửa)</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered db-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="25%">Trường</th>
+                                <th width="20%">Kiểu dữ liệu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>id</code></td><td>Integer (PK)</td><td>Khóa chính</td></tr>
+                            <tr><td><code>face_user</code></td><td>ForeignKey → FaceUser</td><td>Người được nhận diện</td></tr>
+                            <tr><td><code>event_type</code></td><td>CharField(20)</td><td>checkin | checkout | check</td></tr>
+                            <tr class="table-danger"><td><code>confidence</code></td><td>Float</td><td><strong>Độ tin cậy</strong> (0.0 - 1.0)</td></tr>
+                            <tr><td><code>timestamp</code></td><td>DateTime</td><td>Thời gian nhận diện</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FaceRecognitionStatus -->
+            <div class="mb-3">
+                <h5 class="text-dark"><i class="fas fa-clock mr-2"></i>7. FaceRecognitionStatus (Trạng thái gần nhất)</h5>
+                <p class="text-muted small">Lưu trạng thái nhận diện gần nhất của mỗi người (1-1 với FaceUser)</p>
+                <div class="table-responsive">
+                    <table class="table table-bordered db-table mb-0">
+                        <thead>
+                            <tr>
+                                <th width="25%">Trường</th>
+                                <th width="20%">Kiểu dữ liệu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>id</code></td><td>Integer (PK)</td><td>Khóa chính</td></tr>
+                            <tr><td><code>face_user</code></td><td>OneToOne → FaceUser</td><td>Liên kết 1-1</td></tr>
+                            <tr><td><code>last_event</code></td><td>CharField(20)</td><td>Sự kiện cuối cùng</td></tr>
+                            <tr><td><code>last_time</code></td><td>DateTime</td><td>Thời gian cuối cùng</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ER Diagram mô tả -->
+            <div class="alert alert-info mt-4 mb-0">
+                <h6><i class="fas fa-sitemap mr-2"></i>Quan hệ giữa các bảng:</h6>
+                <ul class="mb-0 small">
+                    <li><strong>User</strong> ↔ <strong>Profile</strong> (1:1) - Mỗi user có 1 profile</li>
+                    <li><strong>User</strong> → <strong>Device</strong> (1:N) - User có nhiều thiết bị</li>
+                    <li><strong>Device</strong> → <strong>SensorLog</strong> (1:N) - Sensor có nhiều log</li>
+                    <li><strong>User</strong> → <strong>FaceUser</strong> (1:N) - Chủ nhà quản lý nhiều người Face ID</li>
+                    <li><strong>FaceUser</strong> → <strong>FaceImage</strong> (1:N) - Mỗi người có nhiều ảnh</li>
+                    <li><strong>FaceUser</strong> → <strong>AttendanceLog</strong> (1:N) - Mỗi người có nhiều lịch sử</li>
+                    <li><strong>FaceUser</strong> ↔ <strong>FaceRecognitionStatus</strong> (1:1) - Trạng thái gần nhất</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Luồng hoạt động -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-exchange-alt text-primary mr-2"></i>Luồng hoạt động</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-success"><i class="fas fa-arrow-up mr-2"></i>ESP32 → Server</h6>
+                    <div class="timeline">
+                        <div class="timeline-item">ESP32 đọc cảm biến</div>
+                        <div class="timeline-item">Publish MQTT: <code>apikey/{key}/receiver/{code}</code></div>
+                        <div class="timeline-item">Django nhận và xử lý</div>
+                        <div class="timeline-item">Lưu DB + WebSocket broadcast</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-danger"><i class="fas fa-arrow-down mr-2"></i>Server → ESP32</h6>
+                    <div class="timeline">
+                        <div class="timeline-item">User click bật/tắt trên Dashboard</div>
+                        <div class="timeline-item">API POST toggle device</div>
+                        <div class="timeline-item">Publish MQTT: <code>apikey/{key}/control/{code}</code></div>
+                        <div class="timeline-item">ESP32 nhận và thực hiện</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Công nghệ -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-cogs text-primary mr-2"></i>Công nghệ sử dụng</h4>
+            <div class="row">
+                <div class="col-md-3 col-6 mb-3">
+                    <h6>Backend</h6>
+                    <span class="tech-badge bg-success text-white">Django 4.2</span>
+                    <span class="tech-badge bg-info text-white">Channels</span>
+                    <span class="tech-badge bg-danger text-white">Redis</span>
+                    <span class="tech-badge bg-primary text-white">Daphne</span>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <h6>Frontend</h6>
+                    <span class="tech-badge bg-purple text-white" style="background:#7c3aed">Bootstrap 5</span>
+                    <span class="tech-badge bg-warning text-dark">JavaScript</span>
+                    <span class="tech-badge bg-info text-white">WebSocket</span>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <h6>IoT</h6>
+                    <span class="tech-badge bg-dark text-white">ESP32</span>
+                    <span class="tech-badge bg-primary text-white">MQTT</span>
+                    <span class="tech-badge bg-success text-white">WiFi</span>
+                </div>
+                <div class="col-md-3 col-6 mb-3">
+                    <h6>AI/ML</h6>
+                    <span class="tech-badge bg-purple text-white" style="background:#7c3aed">InsightFace</span>
+                    <span class="tech-badge bg-info text-white">OpenCV</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sơ đồ chân ESP32 -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-microchip text-primary mr-2"></i>Sơ đồ chân ESP32</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead class="thead-light">
+                        <tr><th>Thiết bị</th><th>GPIO</th><th>Device Code</th><th>Mô tả</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><i class="fas fa-lightbulb text-warning"></i> Đèn</td><td>16 (Relay) / 13 (Button)</td><td>v1</td><td>Relay điều khiển đèn</td></tr>
+                        <tr><td><i class="fas fa-door-open text-info"></i> Cửa</td><td>17 (Relay) / 14 (Button)</td><td>v2</td><td>Relay điều khiển cửa</td></tr>
+                        <tr><td><i class="fas fa-fan text-primary"></i> Quạt</td><td>18 (Relay) / 15 (Button)</td><td>v3</td><td>Relay điều khiển quạt</td></tr>
+                        <tr><td><i class="fas fa-fire text-danger"></i> Lửa</td><td>33 (Digital)</td><td>v4</td><td>Cảm biến lửa</td></tr>
+                        <tr><td><i class="fas fa-smog text-secondary"></i> Gas</td><td>32 (Analog)</td><td>v5</td><td>Cảm biến khí gas MQ2</td></tr>
+                        <tr><td><i class="fas fa-tint text-info"></i> Độ ẩm</td><td>SDA:5, SCL:4</td><td>v6</td><td>AHT20 - Độ ẩm</td></tr>
+                        <tr><td><i class="fas fa-thermometer-half text-danger"></i> Nhiệt độ</td><td>SDA:5, SCL:4</td><td>v7</td><td>AHT20 - Nhiệt độ</td></tr>
+                        <tr><td><i class="fas fa-walking text-success"></i> PIR</td><td>12 (Digital)</td><td>-</td><td>Cảm biến chuyển động</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MQTT Topics -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-broadcast-tower text-primary mr-2"></i>MQTT Topics</h4>
+            <div class="code-block">
+<pre># ESP32 gửi dữ liệu lên Server (receiver)
+apikey/{API_KEY}/receiver/v1    → Trạng thái đèn: {"status": "on/off"}
+apikey/{API_KEY}/receiver/v2    → Trạng thái cửa: {"status": "on/off"}
+apikey/{API_KEY}/receiver/v3    → Trạng thái quạt: {"status": "on/off"}
+apikey/{API_KEY}/receiver/v4    → Lửa: {"value": 0/1}
+apikey/{API_KEY}/receiver/v5    → Gas: {"value": 0-4095}
+apikey/{API_KEY}/receiver/v6    → Độ ẩm: {"value": 0-100}
+apikey/{API_KEY}/receiver/v7    → Nhiệt độ: {"value": -40~85}
+
+# Server gửi lệnh xuống ESP32 (control)
+apikey/{API_KEY}/control/v1     → {"value": "on/off"}
+apikey/{API_KEY}/control/v2     → {"value": "on/off/door_temp"}  ← door_temp = mở 5s
+apikey/{API_KEY}/control/v3     → {"value": "on/off"}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tính năng đặc biệt -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-magic text-primary mr-2"></i>Tính năng đặc biệt</h4>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="p-3 bg-light rounded h-100">
+                        <h6><i class="fas fa-fire-alt text-danger mr-2"></i>Emergency Mode</h6>
+                        <small class="text-muted">Khi Gas ≥ 300 hoặc phát hiện lửa → <strong class="text-danger">BẬT TẤT CẢ relay</strong> (đèn báo, quạt thông gió, mở cửa thoát hiểm)</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3 bg-light rounded h-100">
+                        <h6><i class="fas fa-user-check text-success mr-2"></i>Face → Door</h6>
+                        <small class="text-muted">Nhận diện thành công → MQTT <code>door_temp</code> → Cửa mở 5 giây rồi tự đóng. Interval: 15 giây chống spam.</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3 bg-light rounded h-100">
+                        <h6><i class="fas fa-walking text-warning mr-2"></i>PIR Auto Light</h6>
+                        <small class="text-muted">Cảm biến PIR phát hiện chuyển động → Bật đèn → Sau 30 giây không có người → Tắt đèn.</small>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="p-3 bg-light rounded h-100">
+                        <h6><i class="fas fa-sync text-info mr-2"></i>Sync on Connect</h6>
+                        <small class="text-muted">ESP32 kết nối/reconnect MQTT → Tự động gửi trạng thái tất cả relay → Dashboard luôn đồng bộ.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hướng dẫn sử dụng -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="section-title"><i class="fas fa-book text-primary mr-2"></i>Hướng dẫn sử dụng</h4>
+            <ol>
+                <li class="mb-2"><strong>Đăng ký / Đăng nhập</strong> - Tạo tài khoản mới hoặc đăng nhập</li>
+                <li class="mb-2"><strong>Lấy API Key</strong> - Vào "Hồ sơ & API Key" để copy API Key</li>
+                <li class="mb-2"><strong>Cấu hình ESP32</strong> - Nạp code Arduino với API Key của bạn</li>
+                <li class="mb-2"><strong>Thêm thiết bị</strong> - Dashboard → "Thêm thiết bị" với Device Code v1-v7</li>
+                <li class="mb-2"><strong>Điều khiển</strong> - Bật/tắt thiết bị, xem biểu đồ cảm biến realtime</li>
+                <li class="mb-2"><strong>Face ID</strong> (tùy chọn) - Đăng ký khuôn mặt để mở cửa tự động</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center py-3">
+        <p class="text-muted mb-2">
+            <i class="fas fa-code"></i> Được phát triển với <i class="fas fa-heart text-danger"></i>
+        </p>
+        <p class="text-muted mb-3"><strong>Đồ án tốt nghiệp</strong> © 2025</p>
+        <a href="{% url 'smart_home' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left mr-2"></i>Quay lại Dashboard
+        </a>
+    </div>
+</div>
+
+        {% include 'includes/footer.html' %}
+
+    </main>
+
+{% endblock content %}
+
+{% block javascripts %}{% endblock javascripts %}

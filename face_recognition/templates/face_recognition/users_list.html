@@ -1,0 +1,516 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Quản lý Face ID {% endblock %}
+
+{% block stylesheets %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    .page-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
+    .page-header p { opacity: 0.9; margin-bottom: 0; }
+    
+    .stat-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        text-align: center;
+    }
+    .stat-card .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 1.5rem;
+    }
+    .stat-card .stat-value { font-size: 2rem; font-weight: 700; }
+    .stat-card .stat-label { color: #6c757d; font-size: 0.85rem; }
+    
+    .user-card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-left: 4px solid #667eea;
+    }
+    .user-card .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+    .user-card .user-info { flex: 1; margin-left: 15px; }
+    .user-card .user-name { font-weight: 600; font-size: 1rem; }
+    .user-card .user-code { color: #6c757d; font-size: 0.85rem; }
+    .user-card .face-count {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-upload { background: #e3f2fd; color: #1976d2; }
+    .btn-upload:hover { background: #1976d2; color: #fff; }
+    .btn-delete { background: #ffebee; color: #d32f2f; }
+    .btn-delete:hover { background: #d32f2f; color: #fff; }
+    
+    .log-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-time { font-size: 0.8rem; color: #6c757d; }
+    .log-name { font-weight: 600; }
+    .log-confidence { 
+        font-size: 0.75rem; 
+        background: #e8f5e9; 
+        color: #2e7d32; 
+        padding: 2px 6px; 
+        border-radius: 4px; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="content">
+    {% include 'includes/navigation.html' %}
+
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1><span class="fas fa-user-circle mr-2"></span>Quản lý Face ID</h1>
+            <p>Đăng ký và quản lý người dùng nhận diện khuôn mặt</p>
+        </div>
+        <div>
+            <a href="{% url 'test_camera' %}" class="btn btn-light">
+                <span class="fas fa-video mr-1"></span> Test Camera
+            </a>
+            <button class="btn btn-light ml-2" data-toggle="modal" data-target="#addUserModal">
+                <span class="fas fa-plus mr-1"></span> Thêm người
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(102, 126, 234, 0.15); color: #667eea;">
+                    <span class="fas fa-users"></span>
+                </div>
+                <div class="stat-value">{{ total_users }}</div>
+                <div class="stat-label">Người dùng</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(76, 175, 80, 0.15); color: #4caf50;">
+                    <span class="fas fa-check-circle"></span>
+                </div>
+                <div class="stat-value">{{ today_logs }}</div>
+                <div class="stat-label">Nhận diện hôm nay</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(255, 152, 0, 0.15); color: #ff9800;">
+                    <span class="fas fa-clock"></span>
+                </div>
+                <div class="stat-value">5</div>
+                <div class="stat-label">Phút giữa 2 lần</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Danh sách người dùng -->
+        <div class="col-lg-8">
+            <div class="card border-light shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><span class="fas fa-list mr-2"></span>Danh sách người dùng</h5>
+                </div>
+                <div class="card-body">
+                    {% for user in face_users %}
+                    <div class="user-card d-flex align-items-center">
+                        <div class="user-avatar">{{ user.name|slice:":1"|upper }}</div>
+                        <div class="user-info">
+                            <div class="user-name">{{ user.name }}</div>
+                            <div class="user-code">
+                                Mã: {{ user.user_code }} 
+                                <span class="face-count ml-2">{{ user.face_count }} ảnh</span>
+                            </div>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn-action btn-upload" onclick="openUploadModal({{ user.id }}, '{{ user.name }}')" title="Upload ảnh">
+                                <span class="fas fa-camera"></span>
+                            </button>
+                            <button class="btn-action btn-delete ml-1" onclick="confirmDelete({{ user.id }}, '{{ user.name }}')" title="Xóa">
+                                <span class="fas fa-trash"></span>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-muted">
+                        <span class="fas fa-user-plus fa-3x mb-3"></span>
+                        <p>Chưa có người dùng nào</p>
+                        <button class="btn btn-primary" data-toggle="modal" data-target="#addUserModal">
+                            <span class="fas fa-plus mr-1"></span> Thêm người đầu tiên
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs gần đây -->
+        <div class="col-lg-4">
+            <div class="card border-light shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><span class="fas fa-history mr-2"></span>Nhận diện gần đây</h5>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    {% for log in recent_logs %}
+                    <div class="log-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="log-name">{{ log.face_user.name }}</span>
+                            <span class="log-confidence">{{ log.confidence|floatformat:0 }}%</span>
+                        </div>
+                        <div class="log-time">
+                            <span class="fas fa-clock mr-1"></span>{{ log.timestamp|date:"H:i d/m/Y" }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <span class="fas fa-inbox fa-2x mb-2"></span>
+                        <p class="mb-0">Chưa có log nào</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm người -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><span class="fas fa-user-plus mr-2"></span>Thêm người mới</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal"></button>
+                </div>
+                <form action="{% url 'add_face_user' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">Họ tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" placeholder="Nhập họ tên đầy đủ" required>
+                            <small class="text-muted">Mã người dùng sẽ được tạo tự động</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="fas fa-plus mr-1"></span> Thêm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Upload ảnh -->
+    <div class="modal fade" id="uploadModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><span class="fas fa-camera mr-2"></span>Thêm ảnh khuôn mặt</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Thêm ảnh cho: <strong id="uploadUserName"></strong></p>
+                    
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="tab" href="#tabCamera">
+                                <span class="fas fa-video mr-1"></span> Chụp từ Camera
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="tab" href="#tabUpload">
+                                <span class="fas fa-upload mr-1"></span> Upload file
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content">
+                        <!-- Tab Camera -->
+                        <div class="tab-pane fade show active" id="tabCamera">
+                            <div class="camera-preview mb-3" style="background:#000; border-radius:8px; overflow:hidden; position:relative;">
+                                <video id="uploadVideo" autoplay playsinline style="width:100%; max-height:300px; display:none;"></video>
+                                <canvas id="uploadCanvas" style="display:none;"></canvas>
+                                <div id="cameraPlaceholder" class="text-center text-white py-5">
+                                    <span class="fas fa-video fa-3x mb-2" style="opacity:0.5;"></span>
+                                    <p style="opacity:0.7;">Nhấn "Bật Camera" để chụp ảnh</p>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-center gap-2 mb-3">
+                                <button type="button" class="btn btn-success" id="btnStartCam" onclick="startUploadCamera()">
+                                    <span class="fas fa-play mr-1"></span> Bật Camera
+                                </button>
+                                <button type="button" class="btn btn-primary" id="btnCapture" onclick="capturePhoto()" style="display:none;">
+                                    <span class="fas fa-camera mr-1"></span> Chụp ảnh
+                                </button>
+                                <button type="button" class="btn btn-danger" id="btnStopCam" onclick="stopUploadCamera()" style="display:none;">
+                                    <span class="fas fa-stop mr-1"></span> Tắt Camera
+                                </button>
+                            </div>
+                            
+                            <!-- Ảnh đã chụp -->
+                            <div id="capturedPhotos" class="d-flex flex-wrap gap-2 mb-3"></div>
+                            <small class="text-muted" id="photoCount">Chưa có ảnh nào</small>
+                        </div>
+                        
+                        <!-- Tab Upload -->
+                        <div class="tab-pane fade" id="tabUpload">
+                            <div class="form-group">
+                                <label class="font-weight-bold">Chọn ảnh từ máy (có thể chọn nhiều)</label>
+                                <input type="file" class="form-control" id="faceImagesInput" accept="image/*" multiple>
+                                <small class="text-muted">Chọn ảnh có 1 khuôn mặt rõ ràng</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="uploadProgress" style="display: none;" class="mt-3">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                        </div>
+                        <small class="text-muted">Đang xử lý...</small>
+                    </div>
+                    <div id="uploadResult" class="mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="stopUploadCamera()">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="uploadFaces()" id="btnUpload">
+                        <span class="fas fa-save mr-1"></span> Lưu ảnh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Xác nhận xóa -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><span class="fas fa-exclamation-triangle mr-2"></span>Xác nhận xóa</h5>
+                    <button type="button" class="btn-close btn-close-white" data-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <span class="fas fa-user-times fa-3x text-danger mb-3"></span>
+                    <p>Bạn có chắc muốn xóa <strong id="deleteUserName"></strong>?</p>
+                    <p class="text-muted small">Tất cả ảnh khuôn mặt sẽ bị xóa!</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <form id="deleteForm" method="POST" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <span class="fas fa-trash mr-1"></span> Xóa
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'includes/footer.html' %}
+</main>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+let currentUserId = null;
+let uploadStream = null;
+let capturedImages = [];
+
+function openUploadModal(userId, userName) {
+    currentUserId = userId;
+    capturedImages = [];
+    document.getElementById('uploadUserName').textContent = userName;
+    document.getElementById('faceImagesInput').value = '';
+    document.getElementById('uploadResult').innerHTML = '';
+    document.getElementById('uploadProgress').style.display = 'none';
+    document.getElementById('capturedPhotos').innerHTML = '';
+    document.getElementById('photoCount').textContent = 'Chưa có ảnh nào';
+    stopUploadCamera();
+    new bootstrap.Modal(document.getElementById('uploadModal')).show();
+}
+
+// Camera functions
+async function startUploadCamera() {
+    const isSecure = location.protocol === 'https:' || 
+                     location.hostname === 'localhost' || 
+                     location.hostname === '127.0.0.1';
+    
+    if (!isSecure) {
+        alert('Camera chỉ hoạt động trên HTTPS hoặc localhost!\n\nTruy cập: https://' + location.hostname + ':8443');
+        return;
+    }
+    
+    try {
+        uploadStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+        });
+        
+        const video = document.getElementById('uploadVideo');
+        video.srcObject = uploadStream;
+        video.style.display = 'block';
+        document.getElementById('cameraPlaceholder').style.display = 'none';
+        document.getElementById('btnStartCam').style.display = 'none';
+        document.getElementById('btnCapture').style.display = 'inline-block';
+        document.getElementById('btnStopCam').style.display = 'inline-block';
+    } catch (err) {
+        alert('Không thể mở camera: ' + err.message);
+    }
+}
+
+function stopUploadCamera() {
+    if (uploadStream) {
+        uploadStream.getTracks().forEach(track => track.stop());
+        uploadStream = null;
+    }
+    document.getElementById('uploadVideo').style.display = 'none';
+    document.getElementById('cameraPlaceholder').style.display = 'block';
+    document.getElementById('btnStartCam').style.display = 'inline-block';
+    document.getElementById('btnCapture').style.display = 'none';
+    document.getElementById('btnStopCam').style.display = 'none';
+}
+
+function capturePhoto() {
+    const video = document.getElementById('uploadVideo');
+    const canvas = document.getElementById('uploadCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    capturedImages.push(imageData);
+    
+    // Hiển thị ảnh đã chụp
+    const container = document.getElementById('capturedPhotos');
+    const imgWrapper = document.createElement('div');
+    imgWrapper.style.cssText = 'position:relative; display:inline-block;';
+    imgWrapper.innerHTML = `
+        <img src="${imageData}" style="width:80px; height:80px; object-fit:cover; border-radius:8px; border:2px solid #4caf50;">
+        <button type="button" onclick="removePhoto(${capturedImages.length - 1}, this)" 
+                style="position:absolute; top:-5px; right:-5px; width:20px; height:20px; border-radius:50%; 
+                       background:#f44336; color:#fff; border:none; font-size:12px; cursor:pointer;">×</button>
+    `;
+    container.appendChild(imgWrapper);
+    
+    document.getElementById('photoCount').textContent = `Đã chụp ${capturedImages.length} ảnh`;
+}
+
+function removePhoto(index, btn) {
+    capturedImages[index] = null;
+    btn.parentElement.remove();
+    const validCount = capturedImages.filter(x => x).length;
+    document.getElementById('photoCount').textContent = validCount ? `Đã chụp ${validCount} ảnh` : 'Chưa có ảnh nào';
+}
+
+function uploadFaces() {
+    const fileInput = document.getElementById('faceImagesInput');
+    const validCameraImages = capturedImages.filter(x => x);
+    
+    if (!fileInput.files.length && !validCameraImages.length) {
+        alert('Vui lòng chụp ảnh hoặc chọn file!');
+        return;
+    }
+    
+    const formData = new FormData();
+    
+    // Thêm file upload
+    for (let file of fileInput.files) {
+        formData.append('face_images', file);
+    }
+    
+    // Thêm ảnh từ camera
+    validCameraImages.forEach(img => {
+        formData.append('camera_images', img);
+    });
+    
+    document.getElementById('uploadProgress').style.display = 'block';
+    document.getElementById('btnUpload').disabled = true;
+    
+    fetch(`/face/users/${currentUserId}/upload/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('btnUpload').disabled = false;
+        
+        if (data.success) {
+            document.getElementById('uploadResult').innerHTML = 
+                `<div class="alert alert-success"><span class="fas fa-check mr-1"></span>${data.message}</div>`;
+            stopUploadCamera();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            document.getElementById('uploadResult').innerHTML = 
+                `<div class="alert alert-danger"><span class="fas fa-times mr-1"></span>${data.error}</div>`;
+        }
+    })
+    .catch(err => {
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('btnUpload').disabled = false;
+        document.getElementById('uploadResult').innerHTML = 
+            `<div class="alert alert-danger">Lỗi: ${err.message}</div>`;
+    });
+}
+
+function confirmDelete(userId, userName) {
+    document.getElementById('deleteUserName').textContent = userName;
+    document.getElementById('deleteForm').action = `/face/users/${userId}/delete/`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// Đóng camera khi đóng modal
+document.getElementById('uploadModal').addEventListener('hidden.bs.modal', function () {
+    stopUploadCamera();
+});
+</script>
+{% endblock %}

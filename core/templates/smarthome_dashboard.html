@@ -1,0 +1,479 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Smart Home Dashboard {% endblock %} 
+
+{% block stylesheets %}
+<style>
+    .device-card {
+        transition: all 0.3s ease;
+    }
+    .device-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .relay-switch {
+        cursor: pointer;
+    }
+    .relay-on {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+    .relay-off {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+    .sensor-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .sensor-unit {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    .update-time {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .status-online {
+        background-color: #28a745;
+        animation: pulse 2s infinite;
+    }
+    .status-offline {
+        background-color: #dc3545;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+    }
+    .connection-status {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 0.875rem;
+        z-index: 1000;
+    }
+    .ws-connected {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    .ws-disconnected {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+<main class="content">
+
+    {% include 'includes/navigation.html' %}
+
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+        <div>
+            <h2 class="h4">Smart Home Dashboard</h2>
+            <p class="mb-0">
+                <span class="status-indicator" id="wsStatus"></span>
+                <span id="wsStatusText">Đang kết nối...</span>
+                <span class="ms-3 update-time">Cập nhật: <span id="lastUpdate">--:-- --/--/----</span></span>
+            </p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'smart_home' %}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-cog me-1"></i> Quản lý thiết bị
+            </a>
+        </div>
+    </div>
+
+    <!-- Relays Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-toggle-on me-2"></i>Điều khiển Relay</h5>
+        </div>
+        <div class="col-12">
+            <div class="row" id="relayContainer">
+                <!-- Relays will be loaded here -->
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Đang tải thiết bị...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sensors Section -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-thermometer-half me-2"></i>Cảm biến</h5>
+        </div>
+        <div class="col-12">
+            <div class="row" id="sensorContainer">
+                <!-- Sensors will be loaded here -->
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Đang tải cảm biến...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Stream Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h5 class="mb-3"><i class="fas fa-video me-2"></i>Camera & Nhận diện khuôn mặt</h5>
+        </div>
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-camera me-2"></i>ESP32 Camera Stream</span>
+                    <div>
+                        <span class="badge bg-success" id="cameraStatusBadge">
+                            <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>Live
+                        </span>
+                        <a href="{% url 'esp32_camera_dashboard' %}" class="btn btn-sm btn-outline-primary ms-2">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0" style="background: #000;">
+                    <img src="{% url 'esp32_video_feed' %}?recognition=true" 
+                         class="w-100" 
+                         style="min-height: 300px; object-fit: contain;"
+                         alt="Camera Feed"
+                         id="dashboardCameraFeed"
+                         onerror="this.style.display='none'; document.getElementById('cameraError').style.display='block';">
+                    <div id="cameraError" class="text-center py-5" style="display: none;">
+                        <i class="fas fa-video-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Không thể kết nối camera</p>
+                        <button class="btn btn-sm btn-primary" onclick="reloadCamera()">
+                            <i class="fas fa-sync-alt me-1"></i>Thử lại
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="fas fa-history me-2"></i>Nhận diện gần đây
+                </div>
+                <div class="card-body" style="max-height: 350px; overflow-y: auto;" id="recentRecognitions">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-user-clock fa-2x mb-2"></i>
+                        <p class="small">Chưa có nhận diện</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'esp32_camera_dashboard' %}" class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-external-link-alt me-1"></i>Mở Dashboard Camera
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Connection Status -->
+<div class="connection-status ws-disconnected" id="connectionStatus">
+    <i class="fas fa-wifi me-2"></i>
+    <span id="connectionText">Đang kết nối...</span>
+</div>
+
+{% endblock content %}
+
+{% block javascripts %}
+<script>
+    let socket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 10;
+    
+    // WebSocket connection
+    function connectWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/dashboard/`;
+        
+        console.log('Connecting to WebSocket:', wsUrl);
+        
+        socket = new WebSocket(wsUrl);
+        
+        socket.onopen = function(e) {
+            console.log('WebSocket connected');
+            reconnectAttempts = 0;
+            updateConnectionStatus(true);
+        };
+        
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log('WebSocket message:', data);
+            handleWebSocketMessage(data);
+        };
+        
+        socket.onclose = function(e) {
+            console.log('WebSocket closed:', e.code, e.reason);
+            updateConnectionStatus(false);
+            
+            // Auto reconnect
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                const delay = Math.min(1000 * reconnectAttempts, 10000);
+                console.log(`Reconnecting in ${delay/1000}s... (attempt ${reconnectAttempts})`);
+                setTimeout(connectWebSocket, delay);
+            }
+        };
+        
+        socket.onerror = function(e) {
+            console.error('WebSocket error:', e);
+        };
+    }
+    
+    function updateConnectionStatus(connected) {
+        const statusEl = document.getElementById('connectionStatus');
+        const textEl = document.getElementById('connectionText');
+        const wsStatusEl = document.getElementById('wsStatus');
+        const wsStatusTextEl = document.getElementById('wsStatusText');
+        
+        if (connected) {
+            statusEl.className = 'connection-status ws-connected';
+            textEl.textContent = 'Đã kết nối';
+            wsStatusEl.className = 'status-indicator status-online';
+            wsStatusTextEl.textContent = 'Realtime';
+        } else {
+            statusEl.className = 'connection-status ws-disconnected';
+            textEl.textContent = 'Mất kết nối';
+            wsStatusEl.className = 'status-indicator status-offline';
+            wsStatusTextEl.textContent = 'Đang kết nối lại...';
+        }
+    }
+    
+    function handleWebSocketMessage(data) {
+        switch (data.type) {
+            case 'initial_data':
+                renderDevices(data.devices);
+                updateTimestamp(data.timestamp);
+                break;
+            case 'device_update':
+                updateRelayUI(data.device_code, data.status);
+                updateTimestamp(data.timestamp);
+                showNotification(`${data.name || data.device_code}: ${data.status ? 'BẬT' : 'TẮT'}`, 'info');
+                break;
+            case 'sensor_update':
+                updateSensorUI(data.device_code, data.value, data.unit);
+                updateTimestamp(data.timestamp);
+                break;
+        }
+    }
+    
+    function updateTimestamp(timestamp) {
+        document.getElementById('lastUpdate').textContent = timestamp || new Date().toLocaleString('vi-VN');
+    }
+    
+    function renderDevices(devices) {
+        // Render relays
+        const relayContainer = document.getElementById('relayContainer');
+        if (devices.relays && devices.relays.length > 0) {
+            relayContainer.innerHTML = devices.relays.map(relay => `
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card device-card h-100 ${relay.status ? 'relay-on' : 'relay-off'}" 
+                         id="relay-${relay.device_code}"
+                         onclick="toggleRelay('${relay.device_code}', ${relay.status ? 'false' : 'true'})">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas ${relay.status ? 'fa-toggle-on' : 'fa-toggle-off'} fa-3x"></i>
+                            </div>
+                            <h6 class="card-title mb-1">${relay.name}</h6>
+                            <small class="opacity-75">${relay.device_code}</small>
+                            <div class="mt-2">
+                                <span class="badge ${relay.status ? 'bg-light text-success' : 'bg-light text-secondary'}">
+                                    ${relay.status ? 'BẬT' : 'TẮT'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            relayContainer.innerHTML = `
+                <div class="col-12 text-center py-4">
+                    <i class="fas fa-plug fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chưa có relay nào. <a href="{% url 'smart_home' %}">Thêm thiết bị</a></p>
+                </div>
+            `;
+        }
+        
+        // Render sensors
+        const sensorContainer = document.getElementById('sensorContainer');
+        if (devices.sensors && devices.sensors.length > 0) {
+            sensorContainer.innerHTML = devices.sensors.map(sensor => `
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                    <div class="card device-card h-100" id="sensor-${sensor.device_code}">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-thermometer-half fa-2x text-primary"></i>
+                            </div>
+                            <h6 class="card-title mb-1">${sensor.name}</h6>
+                            <small class="text-muted">${sensor.device_code}</small>
+                            <div class="mt-3">
+                                <span class="sensor-value" id="value-${sensor.device_code}">${sensor.value || 0}</span>
+                                <span class="sensor-unit">${sensor.unit || ''}</span>
+                            </div>
+                            <div class="update-time mt-2">
+                                <i class="fas fa-clock me-1"></i>
+                                <span id="time-${sensor.device_code}">${sensor.last_update || '--'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            sensorContainer.innerHTML = `
+                <div class="col-12 text-center py-4">
+                    <i class="fas fa-thermometer-empty fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Chưa có cảm biến nào. <a href="{% url 'smart_home' %}">Thêm thiết bị</a></p>
+                </div>
+            `;
+        }
+    }
+    
+    function toggleRelay(deviceCode, newStatus) {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+            showNotification('Mất kết nối, vui lòng đợi...', 'error');
+            return;
+        }
+        
+        socket.send(JSON.stringify({
+            action: 'control_device',
+            device_code: deviceCode,
+            value: newStatus
+        }));
+        
+        // Optimistic UI update
+        updateRelayUI(deviceCode, newStatus);
+    }
+    
+    function updateRelayUI(deviceCode, status) {
+        const card = document.getElementById(`relay-${deviceCode}`);
+        if (!card) return;
+        
+        const isOn = status === true || status === 'on' || status === '1' || status === 1;
+        
+        card.className = `card device-card h-100 ${isOn ? 'relay-on' : 'relay-off'}`;
+        card.setAttribute('onclick', `toggleRelay('${deviceCode}', ${isOn ? 'false' : 'true'})`);
+        
+        const icon = card.querySelector('.fas');
+        icon.className = `fas ${isOn ? 'fa-toggle-on' : 'fa-toggle-off'} fa-3x`;
+        
+        const badge = card.querySelector('.badge');
+        badge.className = `badge ${isOn ? 'bg-light text-success' : 'bg-light text-secondary'}`;
+        badge.textContent = isOn ? 'BẬT' : 'TẮT';
+    }
+    
+    function updateSensorUI(deviceCode, value, unit) {
+        const valueEl = document.getElementById(`value-${deviceCode}`);
+        const timeEl = document.getElementById(`time-${deviceCode}`);
+        
+        if (valueEl) {
+            valueEl.textContent = value;
+            // Add animation
+            valueEl.style.transform = 'scale(1.1)';
+            setTimeout(() => valueEl.style.transform = 'scale(1)', 200);
+        }
+        if (timeEl) {
+            timeEl.textContent = new Date().toLocaleString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+    }
+    
+    function showNotification(message, type = 'info') {
+        if (typeof notyf !== 'undefined') {
+            if (type === 'error') {
+                notyf.error(message);
+            } else if (type === 'success') {
+                notyf.success(message);
+            } else {
+                notyf.open({
+                    type: 'info',
+                    message: message
+                });
+            }
+        }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        connectWebSocket();
+        loadRecentRecognitions();
+        setInterval(loadRecentRecognitions, 10000); // Refresh every 10s
+    });
+    
+    // Reconnect when page becomes visible
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && (!socket || socket.readyState !== WebSocket.OPEN)) {
+            connectWebSocket();
+        }
+    });
+    
+    // Camera functions
+    function reloadCamera() {
+        const feed = document.getElementById('dashboardCameraFeed');
+        const error = document.getElementById('cameraError');
+        feed.style.display = 'block';
+        error.style.display = 'none';
+        feed.src = "{% url 'esp32_video_feed' %}?recognition=true&t=" + Date.now();
+    }
+    
+    function loadRecentRecognitions() {
+        fetch("{% url 'get_today_logs' %}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.logs) {
+                    const container = document.getElementById('recentRecognitions');
+                    if (data.logs.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-user-clock fa-2x mb-2"></i>
+                                <p class="small">Chưa có nhận diện hôm nay</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = data.logs.slice(0, 10).map(log => `
+                        <div class="d-flex align-items-center mb-2 p-2 bg-light rounded">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-user-check text-success fa-lg"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-2">
+                                <div class="fw-bold small">${log.name}</div>
+                                <small class="text-muted">${log.time}</small>
+                            </div>
+                            <span class="badge bg-success">${log.confidence}%</span>
+                        </div>
+                    `).join('');
+                }
+            })
+            .catch(err => console.error('Failed to load recognitions:', err));
+    }
+</script>
+{% endblock javascripts %}

@@ -1,0 +1,609 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Sơ đồ cơ sở dữ liệu {% endblock %} 
+
+{% block stylesheets %}
+<style>
+    .schema-hero {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+    .table-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        overflow: hidden;
+    }
+    .table-card .card-header {
+        padding: 15px 20px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        border-bottom: none;
+    }
+    .table-card.profile .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .table-card.device .card-header { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
+    .table-card.sensorlog .card-header { background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%); color: white; }
+    .table-card.faceuser .card-header { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+    .table-card.faceimage .card-header { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+    .table-card.attendance .card-header { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
+    .table-card.status .card-header { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; }
+    
+    .field-table {
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+    .field-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+    .field-table td {
+        vertical-align: middle;
+    }
+    .field-name {
+        font-family: 'Courier New', monospace;
+        background: #e2e8f0;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .field-name.pk {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .field-name.fk {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    .field-type {
+        font-size: 11px;
+        color: #64748b;
+    }
+    .badge-pk {
+        background: #fbbf24;
+        color: #78350f;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+    .badge-fk {
+        background: #3b82f6;
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+    .badge-unique {
+        background: #8b5cf6;
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+    .badge-required {
+        background: #ef4444;
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+    
+    /* ER Diagram */
+    .er-diagram {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 25px;
+    }
+    .er-entity {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 15px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 13px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .er-entity.main { border-color: #667eea; background: #eef2ff; }
+    .er-entity.device { border-color: #10b981; background: #ecfdf5; }
+    .er-entity.face { border-color: #f59e0b; background: #fffbeb; }
+    .er-relation {
+        font-size: 11px;
+        color: #64748b;
+        text-align: center;
+    }
+    .er-line {
+        border-top: 2px dashed #cbd5e1;
+        position: relative;
+    }
+    
+    /* Stats */
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+    .stat-label {
+        font-size: 13px;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+    
+    .section-title {
+        border-left: 4px solid #11998e;
+        padding-left: 15px;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+
+    <main class="content">
+
+        {% include 'includes/navigation.html' %}
+
+        <!-- Hero -->
+        <div class="schema-hero text-center">
+            <h1 class="mb-2"><i class="fas fa-database mr-2"></i>Database Schema</h1>
+            <p class="mb-0 opacity-90">Sơ đồ cấu trúc cơ sở dữ liệu Smart Home</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-primary">7</div>
+                    <div class="stat-label">Bảng dữ liệu</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-success">45+</div>
+                    <div class="stat-label">Trường dữ liệu</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-warning">6</div>
+                    <div class="stat-label">Foreign Keys</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-info">2</div>
+                    <div class="stat-label">One-to-One</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ER Diagram Visual -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h4 class="section-title"><i class="fas fa-sitemap text-success mr-2"></i>Entity Relationship Diagram</h4>
+                <div class="er-diagram" style="overflow-x: auto;">
+                    <!-- SVG ER Diagram with arrows -->
+                    <svg viewBox="0 0 950 580" style="width:100%; min-width:800px; margin:0 auto; display:block;">
+                        <!-- Definitions for arrows -->
+                        <defs>
+                            <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="#6366f1"/>
+                            </marker>
+                            <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="#10b981"/>
+                            </marker>
+                            <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+                                <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b"/>
+                            </marker>
+                        </defs>
+                        
+                        <!-- USER Entity (Center Top) -->
+                        <rect x="375" y="30" width="200" height="55" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="3"/>
+                        <text x="475" y="63" text-anchor="middle" font-weight="bold" font-size="15" fill="#4338ca">👤 User (Django Auth)</text>
+                        
+                        <!-- ========== LEFT BRANCH: Profile ========== -->
+                        <!-- Arrow: User -> Profile (1:1) -->
+                        <path d="M375,57 L140,130" stroke="#6366f1" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+                        <rect x="220" y="75" width="45" height="24" rx="5" fill="#c7d2fe"/>
+                        <text x="242" y="92" text-anchor="middle" font-size="12" font-weight="bold" fill="#4338ca">1:1</text>
+                        
+                        <!-- PROFILE Entity -->
+                        <rect x="40" y="140" width="200" height="55" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="3"/>
+                        <text x="140" y="173" text-anchor="middle" font-weight="bold" font-size="14" fill="#4338ca">🪪 Profile</text>
+                        <text x="140" y="215" text-anchor="middle" font-size="12" fill="#64748b">API Key, Avatar, Info</text>
+                        
+                        <!-- ========== CENTER BRANCH: Device ========== -->
+                        <!-- Arrow: User -> Device (1:N) -->
+                        <path d="M420,85 L320,140" stroke="#10b981" stroke-width="2.5" fill="none" marker-end="url(#arrow-green)"/>
+                        <rect x="340" y="95" width="45" height="24" rx="5" fill="#d1fae5"/>
+                        <text x="362" y="112" text-anchor="middle" font-size="12" font-weight="bold" fill="#059669">1:N</text>
+                        
+                        <!-- DEVICE Entity -->
+                        <rect x="260" y="150" width="180" height="55" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="3"/>
+                        <text x="350" y="183" text-anchor="middle" font-weight="bold" font-size="14" fill="#059669">🔌 Device</text>
+                        <text x="350" y="225" text-anchor="middle" font-size="12" fill="#64748b">Relay & Sensor</text>
+                        
+                        <!-- Arrow: Device -> SensorLog (1:N) -->
+                        <path d="M350,205 L350,280" stroke="#10b981" stroke-width="2.5" fill="none" marker-end="url(#arrow-green)"/>
+                        <rect x="327" y="230" width="45" height="24" rx="5" fill="#d1fae5"/>
+                        <text x="350" y="247" text-anchor="middle" font-size="12" font-weight="bold" fill="#059669">1:N</text>
+                        
+                        <!-- SENSORLOG Entity -->
+                        <rect x="260" y="290" width="180" height="55" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="3"/>
+                        <text x="350" y="323" text-anchor="middle" font-weight="bold" font-size="14" fill="#059669">📊 SensorLog</text>
+                        <text x="350" y="365" text-anchor="middle" font-size="12" fill="#64748b">Lịch sử cảm biến</text>
+                        
+                        <!-- ========== RIGHT BRANCH: FaceUser ========== -->
+                        <!-- Arrow: User -> FaceUser (1:N) -->
+                        <path d="M575,57 Q650,57 700,130" stroke="#f59e0b" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange)"/>
+                        <rect x="620" y="65" width="45" height="24" rx="5" fill="#fef3c7"/>
+                        <text x="642" y="82" text-anchor="middle" font-size="12" font-weight="bold" fill="#d97706">1:N</text>
+                        
+                        <!-- FACEUSER Entity -->
+                        <rect x="600" y="140" width="200" height="55" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="3"/>
+                        <text x="700" y="173" text-anchor="middle" font-weight="bold" font-size="14" fill="#d97706">😊 FaceUser</text>
+                        <text x="700" y="215" text-anchor="middle" font-size="12" fill="#64748b">Người dùng Face ID</text>
+                        
+                        <!-- Arrow: FaceUser -> FaceImage (1:N) -->
+                        <path d="M640,195 L540,280" stroke="#f59e0b" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange)"/>
+                        <rect x="560" y="225" width="45" height="24" rx="5" fill="#fef3c7"/>
+                        <text x="582" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#d97706">1:N</text>
+                        
+                        <!-- Arrow: FaceUser -> AttendanceLog (1:N) -->
+                        <path d="M760,195 L860,280" stroke="#f59e0b" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange)"/>
+                        <rect x="800" y="225" width="45" height="24" rx="5" fill="#fef3c7"/>
+                        <text x="822" y="242" text-anchor="middle" font-size="12" font-weight="bold" fill="#d97706">1:N</text>
+                        
+                        <!-- Arrow: FaceUser -> FaceRecognitionStatus (1:1) -->
+                        <path d="M700,195 L700,410" stroke="#f59e0b" stroke-width="2.5" fill="none" marker-end="url(#arrow-orange)"/>
+                        <rect x="677" y="300" width="45" height="24" rx="5" fill="#fef3c7"/>
+                        <text x="700" y="317" text-anchor="middle" font-size="12" font-weight="bold" fill="#d97706">1:1</text>
+                        
+                        <!-- FACEIMAGE Entity -->
+                        <rect x="470" y="290" width="160" height="55" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="3"/>
+                        <text x="550" y="323" text-anchor="middle" font-weight="bold" font-size="13" fill="#d97706">🖼️ FaceImage</text>
+                        <text x="550" y="365" text-anchor="middle" font-size="11" fill="#64748b">Ảnh khuôn mặt</text>
+                        
+                        <!-- ATTENDANCELOG Entity -->
+                        <rect x="770" y="290" width="160" height="55" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="3"/>
+                        <text x="850" y="323" text-anchor="middle" font-weight="bold" font-size="12" fill="#d97706">📋 AttendanceLog</text>
+                        <text x="850" y="365" text-anchor="middle" font-size="11" fill="#64748b">Lịch sử nhận diện</text>
+                        
+                        <!-- FACERECOGNITIONSTATUS Entity -->
+                        <rect x="580" y="420" width="240" height="55" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="3"/>
+                        <text x="700" y="453" text-anchor="middle" font-weight="bold" font-size="12" fill="#d97706">⏱️ FaceRecognitionStatus</text>
+                        <text x="700" y="495" text-anchor="middle" font-size="11" fill="#64748b">Trạng thái nhận diện gần nhất</text>
+                        
+                        <!-- Legend -->
+                        <rect x="40" y="500" width="350" height="65" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+                        <text x="60" y="525" font-size="12" font-weight="bold" fill="#334155">Chú thích:</text>
+                        <line x1="140" y1="520" x2="180" y2="520" stroke="#6366f1" stroke-width="2.5" marker-end="url(#arrow)"/>
+                        <text x="190" y="525" font-size="11" fill="#64748b">1:1 (One-to-One)</text>
+                        <line x1="140" y1="545" x2="180" y2="545" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+                        <text x="190" y="550" font-size="11" fill="#64748b">1:N (One-to-Many)</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Details -->
+        <h4 class="section-title"><i class="fas fa-table text-success mr-2"></i>Chi tiết các bảng</h4>
+
+        <div class="row">
+            <!-- Profile -->
+            <div class="col-lg-6">
+                <div class="card table-card profile">
+                    <div class="card-header">
+                        <i class="fas fa-id-card mr-2"></i>1. Profile
+                        <span class="badge bg-light text-dark ml-2">customers_profile</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table field-table mb-0">
+                            <thead>
+                                <tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="field-name pk">id</span></td><td class="field-type">Integer</td><td><span class="badge-pk">PK</span></td></tr>
+                                <tr><td><span class="field-name fk">user_id</span></td><td class="field-type">Integer</td><td><span class="badge-fk">FK → User</span> <span class="badge-unique">Unique</span></td></tr>
+                                <tr><td><span class="field-name">avatar</span></td><td class="field-type">ImageField</td><td>Nullable</td></tr>
+                                <tr><td><span class="field-name">birthday</span></td><td class="field-type">Date</td><td>Nullable</td></tr>
+                                <tr><td><span class="field-name">gender</span></td><td class="field-type">SmallInt</td><td>1=Nam, 2=Nữ</td></tr>
+                                <tr><td><span class="field-name">phone</span></td><td class="field-type">Char(32)</td><td>Nullable</td></tr>
+                                <tr><td><span class="field-name">address</span></td><td class="field-type">Char(255)</td><td>Nullable</td></tr>
+                                <tr><td><span class="field-name">api_key</span></td><td class="field-type">Char(64)</td><td><span class="badge-unique">Unique</span></td></tr>
+                                <tr><td><span class="field-name">created_at</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                                <tr><td><span class="field-name">updated_at</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device -->
+            <div class="col-lg-6">
+                <div class="card table-card device">
+                    <div class="card-header">
+                        <i class="fas fa-microchip mr-2"></i>2. Device
+                        <span class="badge bg-light text-dark ml-2">devices_device</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table field-table mb-0">
+                            <thead>
+                                <tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="field-name pk">id</span></td><td class="field-type">Integer</td><td><span class="badge-pk">PK</span></td></tr>
+                                <tr><td><span class="field-name fk">user_id</span></td><td class="field-type">Integer</td><td><span class="badge-fk">FK → User</span></td></tr>
+                                <tr><td><span class="field-name">device_code</span></td><td class="field-type">Char(10)</td><td><span class="badge-required">Required</span></td></tr>
+                                <tr><td><span class="field-name">name</span></td><td class="field-type">Char(100)</td><td><span class="badge-required">Required</span></td></tr>
+                                <tr><td><span class="field-name">device_type</span></td><td class="field-type">Char(20)</td><td>relay | sensor</td></tr>
+                                <tr><td><span class="field-name">value</span></td><td class="field-type">Char(50)</td><td>Default: '0'</td></tr>
+                                <tr><td><span class="field-name">unit</span></td><td class="field-type">Char(20)</td><td>Nullable</td></tr>
+                                <tr><td><span class="field-name">is_online</span></td><td class="field-type">Boolean</td><td>Default: False</td></tr>
+                                <tr><td><span class="field-name">enable_logging</span></td><td class="field-type">Boolean</td><td>Default: False</td></tr>
+                                <tr><td><span class="field-name">created_at</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                                <tr><td><span class="field-name">updated_at</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="p-2 bg-light small">
+                            <strong>Unique Together:</strong> (user_id, device_code)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SensorLog -->
+            <div class="col-lg-6">
+                <div class="card table-card sensorlog">
+                    <div class="card-header">
+                        <i class="fas fa-chart-area mr-2"></i>3. SensorLog
+                        <span class="badge bg-light text-dark ml-2">devices_sensorlog</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table field-table mb-0">
+                            <thead>
+                                <tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="field-name pk">id</span></td><td class="field-type">Integer</td><td><span class="badge-pk">PK</span></td></tr>
+                                <tr><td><span class="field-name fk">device_id</span></td><td class="field-type">Integer</td><td><span class="badge-fk">FK → Device</span></td></tr>
+                                <tr><td><span class="field-name">value</span></td><td class="field-type">Float</td><td>Default: 0</td></tr>
+                                <tr><td><span class="field-name">timestamp</span></td><td class="field-type">DateTime</td><td><span class="badge-required">Required</span></td></tr>
+                            </tbody>
+                        </table>
+                        <div class="p-2 bg-light small">
+                            <strong>Index:</strong> timestamp (DESC) - Ghi mỗi 5 phút
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FaceUser -->
+            <div class="col-lg-6">
+                <div class="card table-card faceuser">
+                    <div class="card-header">
+                        <i class="fas fa-user-circle mr-2"></i>4. FaceUser
+                        <span class="badge bg-light text-dark ml-2">face_recognition_faceuser</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table field-table mb-0">
+                            <thead>
+                                <tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="field-name pk">id</span></td><td class="field-type">Integer</td><td><span class="badge-pk">PK</span></td></tr>
+                                <tr><td><span class="field-name">user_code</span></td><td class="field-type">Char(50)</td><td><span class="badge-unique">Unique</span></td></tr>
+                                <tr><td><span class="field-name">name</span></td><td class="field-type">Char(100)</td><td><span class="badge-required">Required</span></td></tr>
+                                <tr><td><span class="field-name fk">owner_id</span></td><td class="field-type">Integer</td><td><span class="badge-fk">FK → User</span></td></tr>
+                                <tr><td><span class="field-name">is_active</span></td><td class="field-type">Boolean</td><td>Default: True</td></tr>
+                                <tr><td><span class="field-name">created_at</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                                <tr><td><span class="field-name">updated_at</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="p-2 bg-light small">
+                            <strong>Unique Together:</strong> (owner_id, user_code)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FaceImage -->
+            <div class="col-lg-6">
+                <div class="card table-card faceimage">
+                    <div class="card-header">
+                        <i class="fas fa-images mr-2"></i>5. FaceImage
+                        <span class="badge bg-light text-dark ml-2">face_recognition_faceimage</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table field-table mb-0">
+                            <thead>
+                                <tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="field-name pk">id</span></td><td class="field-type">Integer</td><td><span class="badge-pk">PK</span></td></tr>
+                                <tr><td><span class="field-name fk">face_user_id</span></td><td class="field-type">Integer</td><td><span class="badge-fk">FK → FaceUser</span></td></tr>
+                                <tr><td><span class="field-name">image_path</span></td><td class="field-type">Char(500)</td><td><span class="badge-required">Required</span></td></tr>
+                                <tr><td><span class="field-name">created_at</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AttendanceLog -->
+            <div class="col-lg-6">
+                <div class="card table-card attendance">
+                    <div class="card-header">
+                        <i class="fas fa-history mr-2"></i>6. AttendanceLog
+                        <span class="badge bg-light text-dark ml-2">face_recognition_attendancelog</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table field-table mb-0">
+                            <thead>
+                                <tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="field-name pk">id</span></td><td class="field-type">Integer</td><td><span class="badge-pk">PK</span></td></tr>
+                                <tr><td><span class="field-name fk">face_user_id</span></td><td class="field-type">Integer</td><td><span class="badge-fk">FK → FaceUser</span></td></tr>
+                                <tr><td><span class="field-name">event_type</span></td><td class="field-type">Char(20)</td><td>checkin|checkout|check</td></tr>
+                                <tr><td><span class="field-name">confidence</span></td><td class="field-type">Float</td><td>0.0 - 1.0</td></tr>
+                                <tr><td><span class="field-name">timestamp</span></td><td class="field-type">DateTime</td><td>Auto</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="p-2 bg-light small">
+                            <strong>Index:</strong> timestamp (DESC) - Lịch sử nhận diện mở cửa
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FaceRecognitionStatus -->
+            <div class="col-lg-6">
+                <div class="card table-card status">
+                    <div class="card-header">
+                        <i class="fas fa-clock mr-2"></i>7. FaceRecognitionStatus
+                        <span class="badge bg-secondary text-white ml-2">face_recognition_facerecognitionstatus</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table field-table mb-0">
+                            <thead>
+                                <tr><th>Trường</th><th>Kiểu</th><th>Ràng buộc</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><span class="field-name pk">id</span></td><td class="field-type">Integer</td><td><span class="badge-pk">PK</span></td></tr>
+                                <tr><td><span class="field-name fk">face_user_id</span></td><td class="field-type">Integer</td><td><span class="badge-fk">FK → FaceUser</span> <span class="badge-unique">Unique</span></td></tr>
+                                <tr><td><span class="field-name">last_event</span></td><td class="field-type">Char(20)</td><td>Nullable</td></tr>
+                                <tr><td><span class="field-name">last_time</span></td><td class="field-type">DateTime</td><td>Nullable</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="p-2 bg-light small">
+                            <strong>One-to-One:</strong> Mỗi FaceUser chỉ có 1 Status
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relationships Summary -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h4 class="section-title"><i class="fas fa-link text-success mr-2"></i>Tổng hợp quan hệ</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Bảng gốc</th>
+                                <th>Quan hệ</th>
+                                <th>Bảng liên kết</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>User</strong></td>
+                                <td><span class="badge bg-info">1:1</span></td>
+                                <td>Profile</td>
+                                <td>Mỗi User có 1 Profile chứa API Key</td>
+                            </tr>
+                            <tr>
+                                <td><strong>User</strong></td>
+                                <td><span class="badge bg-success">1:N</span></td>
+                                <td>Device</td>
+                                <td>User có nhiều thiết bị (relay, sensor)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Device</strong></td>
+                                <td><span class="badge bg-success">1:N</span></td>
+                                <td>SensorLog</td>
+                                <td>Sensor có nhiều log theo thời gian</td>
+                            </tr>
+                            <tr>
+                                <td><strong>User</strong></td>
+                                <td><span class="badge bg-success">1:N</span></td>
+                                <td>FaceUser</td>
+                                <td>Chủ nhà quản lý nhiều người dùng Face ID</td>
+                            </tr>
+                            <tr>
+                                <td><strong>FaceUser</strong></td>
+                                <td><span class="badge bg-success">1:N</span></td>
+                                <td>FaceImage</td>
+                                <td>Mỗi người có nhiều ảnh khuôn mặt</td>
+                            </tr>
+                            <tr>
+                                <td><strong>FaceUser</strong></td>
+                                <td><span class="badge bg-success">1:N</span></td>
+                                <td>AttendanceLog</td>
+                                <td>Mỗi người có nhiều lịch sử nhận diện</td>
+                            </tr>
+                            <tr>
+                                <td><strong>FaceUser</strong></td>
+                                <td><span class="badge bg-info">1:1</span></td>
+                                <td>FaceRecognitionStatus</td>
+                                <td>Trạng thái nhận diện gần nhất</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SQL Info -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <h4 class="section-title"><i class="fas fa-code text-success mr-2"></i>Thông tin kỹ thuật</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-database mr-2"></i>Database Engine</h6>
+                        <ul class="small">
+                            <li><strong>Development:</strong> SQLite3</li>
+                            <li><strong>Production:</strong> PostgreSQL</li>
+                            <li><strong>ORM:</strong> Django ORM</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-cog mr-2"></i>Django Models</h6>
+                        <ul class="small">
+                            <li><code>customers.models.Profile</code></li>
+                            <li><code>devices.models.Device</code></li>
+                            <li><code>devices.models.SensorLog</code></li>
+                            <li><code>face_recognition.models.*</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center py-3">
+            <a href="{% url 'about' %}" class="btn btn-outline-primary mr-2">
+                <i class="fas fa-info-circle mr-2"></i>Giới thiệu đồ án
+            </a>
+            <a href="{% url 'smart_home' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left mr-2"></i>Quay lại Dashboard
+            </a>
+        </div>
+
+        {% include 'includes/footer.html' %}
+
+    </main>
+
+{% endblock content %}
+
+{% block javascripts %}{% endblock javascripts %}

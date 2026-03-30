@@ -1,0 +1,451 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Test Camera - Nhận diện khuôn mặt {% endblock %}
+
+{% block stylesheets %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    .page-header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
+    .page-header p { opacity: 0.9; margin-bottom: 0; }
+    
+    .camera-container {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        min-height: 400px;
+    }
+    #videoElement, #canvasElement, #processedImage {
+        width: 100%;
+        max-height: 500px;
+        object-fit: contain;
+    }
+    #processedImage {
+        display: none;
+    }
+    
+    .camera-controls {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+    .camera-controls .btn {
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+    }
+    
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        z-index: 10;
+    }
+    .status-badge.active { background: #4caf50; color: #fff; }
+    .status-badge.inactive { background: #f44336; color: #fff; }
+    .status-badge.processing { background: #ff9800; color: #fff; }
+    
+    .log-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .log-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        transition: background 0.2s;
+    }
+    .log-item:hover { background: #f8f9fa; }
+    .log-item:last-child { border-bottom: none; }
+    .log-item.new { animation: highlight 2s ease-out; }
+    
+    @keyframes highlight {
+        from { background: #c8e6c9; }
+        to { background: transparent; }
+    }
+    
+    .log-name { font-weight: 600; color: #333; }
+    .log-code { font-size: 0.8rem; color: #666; }
+    .log-time { font-size: 0.75rem; color: #999; }
+    .log-confidence {
+        font-size: 0.75rem;
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+    
+    .user-badge {
+        display: inline-block;
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        margin: 3px;
+    }
+    
+    .recognition-alert {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="content">
+    {% include 'includes/navigation.html' %}
+
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1><span class="fas fa-video mr-2"></span>Test Camera Nhận diện</h1>
+            <p>Mở camera từ trình duyệt để test nhận diện khuôn mặt</p>
+        </div>
+        <div>
+            <a href="{% url 'face_users_list' %}" class="btn btn-light">
+                <span class="fas fa-users mr-1"></span> Quản lý người
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Camera -->
+        <div class="col-lg-8">
+            <div class="card border-light shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><span class="fas fa-camera mr-2"></span>Camera</h5>
+                    <div>
+                        <span class="badge bg-secondary" id="fpsCounter">0 FPS</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="camera-container">
+                        <span class="status-badge inactive" id="statusBadge">
+                            <span class="fas fa-circle mr-1"></span> Chưa bật
+                        </span>
+                        
+                        <video id="videoElement" autoplay playsinline style="display:none;"></video>
+                        <canvas id="canvasElement" style="display:none;"></canvas>
+                        <img id="processedImage" alt="Processed">
+                        
+                        <div id="placeholderText" class="text-center text-white py-5">
+                            <span class="fas fa-video fa-4x mb-3 d-block" style="opacity:0.5;"></span>
+                            <p style="opacity:0.7;">Nhấn "Bật Camera" để bắt đầu</p>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button class="btn btn-success" id="btnStart" onclick="startCamera()">
+                                <span class="fas fa-play mr-1"></span> Bật Camera
+                            </button>
+                            <button class="btn btn-danger" id="btnStop" onclick="stopCamera()" style="display:none;">
+                                <span class="fas fa-stop mr-1"></span> Tắt Camera
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Người đã đăng ký -->
+            <div class="card border-light shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><span class="fas fa-user-check mr-2"></span>Người đã đăng ký ({{ face_users.count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% for user in face_users %}
+                    <span class="user-badge">
+                        <span class="fas fa-user mr-1"></span>
+                        {{ user.name }} ({{ user.user_code }}) - {{ user.face_count }} ảnh
+                    </span>
+                    {% empty %}
+                    <p class="text-muted mb-0">
+                        <span class="fas fa-info-circle mr-1"></span>
+                        Chưa có người nào. <a href="{% url 'face_users_list' %}">Thêm người</a>
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs -->
+        <div class="col-lg-4">
+            <div class="log-card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
+                    <h5 class="mb-0"><span class="fas fa-history mr-2"></span>Nhận diện hôm nay</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshLogs()">
+                        <span class="fas fa-sync-alt"></span>
+                    </button>
+                </div>
+                <div class="card-body p-0" id="logsContainer" style="max-height: 500px; overflow-y: auto;">
+                    {% for log in today_logs %}
+                    <div class="log-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="log-name">{{ log.face_user.name }}</div>
+                                <div class="log-code">{{ log.face_user.user_code }}</div>
+                            </div>
+                            <span class="log-confidence">{{ log.confidence|floatformat:0 }}%</span>
+                        </div>
+                        <div class="log-time mt-1">
+                            <span class="fas fa-clock mr-1"></span>{{ log.timestamp|date:"H:i:s" }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-muted">
+                        <span class="fas fa-inbox fa-2x mb-2 d-block"></span>
+                        <p class="mb-0">Chưa có nhận diện nào</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert container -->
+    <div id="alertContainer"></div>
+
+    {% include 'includes/footer.html' %}
+</main>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+let video = document.getElementById('videoElement');
+let canvas = document.getElementById('canvasElement');
+let processedImg = document.getElementById('processedImage');
+let ctx = canvas.getContext('2d');
+let stream = null;
+let isProcessing = false;
+let frameCount = 0;
+let lastFpsTime = Date.now();
+
+// Kiểm tra hỗ trợ camera
+function checkCameraSupport() {
+    // Kiểm tra HTTPS hoặc localhost
+    const isSecure = location.protocol === 'https:' || 
+                     location.hostname === 'localhost' || 
+                     location.hostname === '127.0.0.1';
+    
+    if (!isSecure) {
+        return {
+            supported: false,
+            error: `Camera chỉ hoạt động trên HTTPS hoặc localhost.\n\nHiện tại: ${location.protocol}//${location.hostname}\n\nCách khắc phục:\n1. Truy cập qua: http://localhost:8000 hoặc http://127.0.0.1:8000\n2. Hoặc cài SSL certificate cho HTTPS`
+        };
+    }
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return {
+            supported: false,
+            error: 'Trình duyệt không hỗ trợ camera API.\n\nVui lòng sử dụng Chrome, Firefox, hoặc Edge phiên bản mới.'
+        };
+    }
+    
+    return { supported: true };
+}
+
+async function startCamera() {
+    // Kiểm tra hỗ trợ
+    const check = checkCameraSupport();
+    if (!check.supported) {
+        alert(check.error);
+        return;
+    }
+    
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { 
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+            }
+        });
+        
+        video.srcObject = stream;
+        video.style.display = 'block';
+        processedImg.style.display = 'block';
+        document.getElementById('placeholderText').style.display = 'none';
+        document.getElementById('btnStart').style.display = 'none';
+        document.getElementById('btnStop').style.display = 'inline-block';
+        
+        updateStatus('active', 'Đang chạy');
+        
+        video.onloadedmetadata = () => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            processFrame();
+        };
+        
+    } catch (err) {
+        console.error('Lỗi camera:', err);
+        
+        let errorMsg = 'Không thể mở camera: ';
+        if (err.name === 'NotAllowedError') {
+            errorMsg += 'Bạn đã từ chối quyền truy cập camera.\n\nVui lòng cho phép camera trong cài đặt trình duyệt.';
+        } else if (err.name === 'NotFoundError') {
+            errorMsg += 'Không tìm thấy camera.\n\nVui lòng kiểm tra camera đã kết nối chưa.';
+        } else if (err.name === 'NotReadableError') {
+            errorMsg += 'Camera đang được sử dụng bởi ứng dụng khác.';
+        } else {
+            errorMsg += err.message;
+        }
+        
+        alert(errorMsg);
+    }
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    
+    video.style.display = 'none';
+    processedImg.style.display = 'none';
+    document.getElementById('placeholderText').style.display = 'block';
+    document.getElementById('btnStart').style.display = 'inline-block';
+    document.getElementById('btnStop').style.display = 'none';
+    
+    updateStatus('inactive', 'Đã tắt');
+    isProcessing = false;
+}
+
+async function processFrame() {
+    if (!stream || isProcessing) {
+        if (stream) requestAnimationFrame(processFrame);
+        return;
+    }
+    
+    isProcessing = true;
+    updateStatus('processing', 'Đang xử lý...');
+    
+    try {
+        // Vẽ frame lên canvas
+        ctx.drawImage(video, 0, 0);
+        
+        // Gửi frame để nhận diện
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        
+        const response = await fetch('/face/camera/recognize/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ image: imageData })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.processed_image) {
+            processedImg.src = data.processed_image;
+            
+            // Hiển thị alert nếu có nhận diện mới
+            if (data.recognized && data.recognized.length > 0) {
+                data.recognized.forEach(user => {
+                    showRecognitionAlert(user);
+                });
+                refreshLogs();
+            }
+        }
+        
+        updateStatus('active', 'Đang chạy');
+        
+        // Tính FPS
+        frameCount++;
+        const now = Date.now();
+        if (now - lastFpsTime >= 1000) {
+            document.getElementById('fpsCounter').textContent = frameCount + ' FPS';
+            frameCount = 0;
+            lastFpsTime = now;
+        }
+        
+    } catch (err) {
+        console.error('Lỗi xử lý:', err);
+        updateStatus('active', 'Đang chạy');
+    }
+    
+    isProcessing = false;
+    
+    // Tiếp tục xử lý frame tiếp theo (giới hạn ~5fps để không quá tải)
+    if (stream) {
+        setTimeout(() => requestAnimationFrame(processFrame), 200);
+    }
+}
+
+function updateStatus(status, text) {
+    const badge = document.getElementById('statusBadge');
+    badge.className = 'status-badge ' + status;
+    badge.innerHTML = `<span class="fas fa-circle mr-1"></span> ${text}`;
+}
+
+function showRecognitionAlert(user) {
+    const container = document.getElementById('alertContainer');
+    const alert = document.createElement('div');
+    alert.className = 'recognition-alert alert alert-success';
+    alert.innerHTML = `
+        <span class="fas fa-check-circle mr-2"></span>
+        <strong>${user.name}</strong> - ${(user.confidence * 100).toFixed(0)}%
+    `;
+    container.appendChild(alert);
+    
+    setTimeout(() => alert.remove(), 3000);
+}
+
+function refreshLogs() {
+    fetch('/face/camera/logs/')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const container = document.getElementById('logsContainer');
+                if (data.logs.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-muted">
+                            <span class="fas fa-inbox fa-2x mb-2 d-block"></span>
+                            <p class="mb-0">Chưa có nhận diện nào</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = data.logs.map(log => `
+                        <div class="log-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="log-name">${log.name}</div>
+                                    <div class="log-code">${log.user_code}</div>
+                                </div>
+                                <span class="log-confidence">${log.confidence}%</span>
+                            </div>
+                            <div class="log-time mt-1">
+                                <span class="fas fa-clock mr-1"></span>${log.time}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        });
+}
+
+// Auto refresh logs mỗi 10 giây
+setInterval(refreshLogs, 10000);
+</script>
+{% endblock %}

@@ -25,19 +25,25 @@ DEVEL   = os.getenv('DEVEL', False)
 SERVER  = os.getenv('DEVEL', '127.0.0.1')
 
 # load production server from .env
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', SERVER]
+ALLOWED_HOSTS = ['*'] 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # ASGI server - must be first
+    'channels',  # WebSocket support
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'sslserver',  # HTTPS server
     'app',  # Enable the inner app
-    'customers'
+    'customers',
+    'devices',  # Smart home devices
+    'face_recognition',  # Face recognition
+    'mqtt',  # MQTT client and scheduler
 ]
 
 MIDDLEWARE = [
@@ -52,7 +58,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'core.urls'
-LOGIN_REDIRECT_URL = "home"   # Route defined in app/urls.py
+LOGIN_REDIRECT_URL = "smart_home"   # Route defined in app/urls.py
 LOGOUT_REDIRECT_URL = "home"  # Route defined in app/urls.py
 TEMPLATE_DIR = os.path.join(CORE_DIR, "core/templates")  # ROOT dir for templates
 
@@ -73,6 +79,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'core.wsgi.application'
+ASGI_APPLICATION = 'core.asgi.application'
+
+# Channels Layer - Redis (cho cross-process communication)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
@@ -106,9 +123,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'vi'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 

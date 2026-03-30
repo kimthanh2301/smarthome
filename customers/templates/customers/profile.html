@@ -1,10 +1,59 @@
 {% extends "layouts/base.html" %}
 {% load static %}
 
-{% block title %} Settings {% endblock %}
+{% block title %} Hồ sơ cá nhân {% endblock %}
 
 <!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %}
+{% block stylesheets %}
+<style>
+    .api-key-box {
+        background: linear-gradient(135deg, #1a1c23 0%, #2d3748 100%);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .api-key-value {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 11px;
+        background: #0d0f12;
+        color: #10B981;
+        padding: 12px 15px;
+        border-radius: 8px;
+        word-break: break-all;
+        letter-spacing: 0.5px;
+        border: 1px solid #374151;
+    }
+    .copy-btn {
+        transition: all 0.3s ease;
+    }
+    .copy-btn:hover {
+        transform: scale(1.05);
+    }
+    .profile-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        margin-bottom: 25px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a1c23;
+    }
+    .stat-label {
+        color: #6c757d;
+        font-size: 13px;
+    }
+</style>
+{% endblock stylesheets %}
 
 {% block content %}
 
@@ -12,186 +61,177 @@
 
         {% include 'includes/navigation.html' %}
 
-        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
-            <div>
-                <button class="btn btn-secondary text-dark mr-2 dropdown-toggle" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false">
-                    <span class="fas fa-plus mr-2"></span>New
-                </button>
-                <div class="dropdown-menu dashboard-dropdown dropdown-menu-left mt-2">
-                    <a class="dropdown-item font-weight-bold" href="#"><span class="far fa-file-alt mr-2"></span>Document</a>
-                    <a class="dropdown-item font-weight-bold" href="#"><span class="far fa-comment-dots mr-2"></span>Message</a>
-                    <a class="dropdown-item font-weight-bold" href="#"><span class="fas fa-box-open mr-2"></span>Product</a>
-                    <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item font-weight-bold" href="#"><span
-                            class="fas fa-rocket text-danger mr-2"></span>Subscription Plan</a>
+        <div class="py-4">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <img src="{{ profile.get_avatar }}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover; border: 3px solid rgba(255,255,255,0.3);">
+                    </div>
+                    <div class="col">
+                        <h2 class="mb-1">
+                            {% if profile.user.get_full_name %}
+                                {{ profile.user.get_full_name }}
+                            {% else %}
+                                {{ profile.user.username }}
+                            {% endif %}
+                        </h2>
+                        <p class="mb-0 opacity-75">
+                            <span class="fas fa-envelope mr-2"></span>{{ profile.user.email|default:"Chưa cập nhật email" }}
+                        </p>
+                        <p class="mb-0 opacity-75">
+                            <span class="fas fa-user mr-2"></span>@{{ profile.user.username }}
+                        </p>
+                    </div>
                 </div>
             </div>
-            <div>
-                <button type="button" class="btn btn-primary mr-2"><span class="fas fa-calendar-alt"></span></button>
-                <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                        aria-expanded="false">
-                    <span class="fas fa-clipboard mr-2"></span>Reports
-                    <span class="icon icon-small ml-1"><span class="fas fa-chevron-down"></span></span>
-                </button>
-                <div class="dropdown-menu dashboard-dropdown dropdown-menu-left mt-2">
-                    <a class="dropdown-item font-weight-bold" href="#"><span class="fas fa-box-open mr-2"></span>Products</a>
-                    <a class="dropdown-item font-weight-bold" href="#"><span class="fas fa-store mr-2"></span>Customers</a>
-                    <a class="dropdown-item font-weight-bold" href="#"><span class="fas fa-cart-arrow-down mr-2"></span>Orders</a>
-                    <a class="dropdown-item font-weight-bold" href="#"><span class="fas fa-chart-pie mr-2"></span>Console</a>
-                    <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item font-weight-bold" href="#"><span
-                            class="fas fa-rocket text-success mr-2"></span>All Reports</a>
+
+            <div class="row">
+                <!-- Stats Cards -->
+                <div class="col-md-4 mb-4">
+                    <div class="stat-card">
+                        <div class="stat-number text-primary">{{ total_devices|default:0 }}</div>
+                        <div class="stat-label">Thiết bị</div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="stat-card">
+                        <div class="stat-number text-success">{{ online_devices|default:0 }}</div>
+                        <div class="stat-label">Đang hoạt động</div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="stat-card">
+                        <div class="stat-number text-info">{{ profile.created_at|timesince }}</div>
+                        <div class="stat-label">Thành viên</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Thông tin cơ bản -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 pb-0">
+                            <h5 class="mb-0">
+                                <span class="fas fa-user-circle text-primary mr-2"></span>
+                                Thông tin cá nhân
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted" style="width: 140px;">Họ và tên</td>
+                                    <td class="font-weight-bold">{{ profile.user.get_full_name|default:"Chưa cập nhật" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Username</td>
+                                    <td class="font-weight-bold">{{ profile.user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Email</td>
+                                    <td class="font-weight-bold">{{ profile.user.email|default:"Chưa cập nhật" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Số điện thoại</td>
+                                    <td class="font-weight-bold">{{ profile.phone|default:"Chưa cập nhật" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Địa chỉ</td>
+                                    <td class="font-weight-bold">{{ profile.address|default:"Chưa cập nhật" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Ngày tham gia</td>
+                                    <td class="font-weight-bold">{{ profile.user.date_joined|date:"d/m/Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Key Section -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 pb-0">
+                            <h5 class="mb-0">
+                                <span class="fas fa-key text-warning mr-2"></span>
+                                API Key cho MQTT
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted small mb-3">
+                                <span class="fas fa-info-circle mr-1"></span>
+                                Sử dụng API Key này để kết nối thiết bị với hệ thống qua MQTT. Giữ bí mật key này!
+                            </p>
+                            
+                            <div class="api-key-box">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-white-50 small">
+                                        <span class="fas fa-shield-alt mr-1"></span> Your API Key
+                                    </span>
+                                    <span class="badge bg-success">64 ký tự</span>
+                                </div>
+                                <div class="api-key-value" id="apiKeyValue">{{ profile.api_key }}</div>
+                                
+                                <div class="d-flex gap-2 mt-3">
+                                    <button type="button" class="btn btn-sm btn-outline-light copy-btn" onclick="copyApiKey()">
+                                        <span class="fas fa-copy mr-1"></span> Copy
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-toggle="modal" data-target="#regenerateModal">
+                                        <span class="fas fa-sync-alt mr-1"></span> Tạo mới
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6 class="text-dark mb-2">Cách sử dụng:</h6>
+                                <div class="bg-light rounded p-3">
+                                    <code class="text-dark small">
+                                        MQTT Topic: <span class="text-primary">smarthome/{{ profile.user.username }}/&lt;device_id&gt;</span><br>
+                                        Username: <span class="text-primary">{{ profile.user.username }}</span><br>
+                                        Password: <span class="text-primary">&lt;API_KEY&gt;</span>
+                                    </code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <form action="{% url 'profile' %}" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-                <div class="col-12 col-xl-8">
-                    <div class="card card-body bg-white border-light shadow-sm mb-4">
-                        <h2 class="h5 mb-4">Profile information</h2>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div>
-                                    <label for="first_name">First Name</label>
-                                    <input name="first_name" class="form-control" id="first_name" type="text"
-                                           placeholder="Enter your first name" value="{{ profile.user.first_name }}"
-                                           required>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div>
-                                    <label for="last_name">Last Name</label>
-                                    <input name="last_name" class="form-control" id="last_name" type="text"
-                                           placeholder="Also your last name" value="{{ profile.user.last_name }}"
-                                           required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row align-items-center">
-                            <div class="col-md-6 mb-3">
-                                <label for="birthday">Birthday</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><span class="far fa-calendar-alt"></span></span>
-                                    <input name="birthday" data-datepicker="" class="form-control" id="birthday"
-                                           type="text" placeholder="dd/mm/yyyy" value="{{ profile.birthday|date:'m/d/Y'|default:'' }}" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="gender">Gender</label>
-                                <select name="gender" class="form-select mb-0" id="gender"
-                                        aria-label="Gender select example">
-                                    <option selected>Gender</option>
-                                    {% for key, value in profile.GENDER_CHOICES %}
-                                        <option value="{{ key }}"
-                                                {% if profile.gender == key %}selected{% endif %}>{{ value }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="form-group">
-                                    <label for="email">Email</label>
-                                    <input name="email" class="form-control" id="email" type="email"
-                                           placeholder="name@company.com" value="{{ profile.user.email }}" readonly>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="form-group">
-                                    <label for="phone">Phone</label>
-                                    <input name="phone" class="form-control" id="phone" type="number"
-                                           placeholder="+12-345 678 910" value="{{ profile.phone }}" required>
-                                </div>
-                            </div>
-                        </div>
-                        <h2 class="h5 my-4">Address</h2>
-                        <div class="row">
-                            <div class="col-sm-9 mb-3">
-                                <div class="form-group">
-                                    <label for="address">Address</label>
-                                    <input name="address" class="form-control" id="address" type="text"
-                                           placeholder="Enter your home address" value="{{ profile.address|default:'' }}" required>
-                                </div>
-                            </div>
-                            <div class="col-sm-3 mb-3">
-                                <div class="form-group">
-                                    <label for="number">Number</label>
-                                    <input name="number" class="form-control" id="number" type="number"
-                                           placeholder="No." value="{{ profile.number|default:'' }}" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-sm-4 mb-3">
-                                <div class="form-group">
-                                    <label for="city">City</label>
-                                    <input name="city" class="form-control" id="city" type="text" placeholder="City"
-                                           value="{{ profile.city|default:'' }}" required>
-                                </div>
-                            </div>
-                            <div class="col-sm-4">
-                                <div class="form-group">
-                                    <label for="zip">ZIP</label>
-                                    <input name="zip" class="form-control" id="zip" type="tel" placeholder="ZIP"
-                                           value="{{ profile.zip|default:'' }}" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-primary">Save All</button>
-                        </div>
+        <!-- Modal xác nhận tạo lại API Key -->
+        <div class="modal fade" id="regenerateModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title">
+                            <span class="fas fa-exclamation-triangle mr-2"></span>
+                            Xác nhận tạo API Key mới
+                        </h5>
+                        <button type="button" class="btn-close" data-dismiss="modal"></button>
                     </div>
-                </div>
-                <div class="col-12 col-xl-4">
-                    <div class="row">
-                        <div class="col-12 mb-4">
-                            <div class="card border-light text-center p-0">
-                                <div class="profile-cover rounded-top"
-                                     data-background="/static/assets/img/profile-cover.jpg"></div>
-                                <div class="card-body pb-5">
-                                    <img src="{{ profile.get_avatar }}"
-                                         class="user-avatar large-avatar rounded-circle mx-auto mt-n7 mb-4"
-                                         alt="Neil Portrait">
-                                    <h4 class="h3">{{ profile.user.username }}</h4>
-                                    <h4 class="font-weight-normal">{{ profile.user.get_full_name }}</h4>
-                                    <h5 class="font-weight-normal">
-                                        {{ request.user.email }}
-                                    </h5>
-                                    <p class="text-gray mb-4">{{ profile.address|default:'' }}</p>
-                                    <a class="btn btn-sm btn-primary mr-2" href="#"><span
-                                            class="fas fa-user-plus mr-1"></span> Connect</a>
-                                    <a class="btn btn-sm btn-secondary" href="#">Send Message</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card card-body bg-white border-light shadow-sm mb-4">
-                                <h2 class="h5 mb-4">Select profile photo</h2>
-                                <div class="d-xl-flex align-items-center">
-                                    <div class="file-field">
-                                        <div class="d-flex justify-content-xl-center ml-xl-3">
-                                            <div class="d-flex">
-                                                <span class="icon icon-md">
-                                                    <span class="fas fa-paperclip mr-3"></span>
-                                                </span>
-                                                <input name="avatar" type="file">
-                                                <div class="d-md-block text-left">
-                                                    <div class="font-weight-normal text-dark mb-1">Choose Image</div>
-                                                    <div class="text-gray small">JPG, GIF or PNG. Max size of 800K</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="modal-body text-center py-4">
+                        <span class="fas fa-key fa-3x text-warning mb-3"></span>
+                        <h5>Bạn có chắc muốn tạo API Key mới?</h5>
+                        <p class="text-muted">
+                            <strong class="text-danger">Cảnh báo:</strong> API Key cũ sẽ bị vô hiệu hóa ngay lập tức.<br>
+                            Tất cả thiết bị đang kết nối sẽ bị ngắt và cần cấu hình lại!
+                        </p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                            <span class="fas fa-times mr-1"></span> Hủy
+                        </button>
+                        <form action="{% url 'regenerate_api_key' %}" method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning">
+                                <span class="fas fa-sync-alt mr-1"></span> Tạo Key mới
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
-        </form>
+        </div>
 
         {% include 'includes/footer.html' %}
 
@@ -200,4 +240,24 @@
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script>
+function copyApiKey() {
+    const apiKey = document.getElementById('apiKeyValue').textContent;
+    navigator.clipboard.writeText(apiKey).then(() => {
+        const notyf = new Notyf({
+            position: { x: 'right', y: 'top' },
+            types: [{
+                type: 'success',
+                background: '#10B981',
+                icon: { className: 'fas fa-check', tagName: 'span', color: '#fff' }
+            }]
+        });
+        notyf.open({
+            type: 'success',
+            message: 'Đã copy API Key!'
+        });
+    });
+}
+</script>
+{% endblock javascripts %}
