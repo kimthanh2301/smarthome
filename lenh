@@ -1,1 +1,11 @@
-cd /home/ubuntu/Desktop/smart_home && python3 manage.py runsslserver 0.0.0.0:8443 --certificate ssl/cert.pem --key ssl/key.pem
+# Chạy web server (terminal 1):
+cd /home/ubuntu/Desktop/smarthome
+daphne -e ssl:8443:privateKey=ssl/key.pem:certKey=ssl/cert.pem core.asgi:application
+
+# Chạy MQTT (terminal 2):
+cd /home/ubuntu/Desktop/smarthome
+python3 manage.py run_mqtt
+
+# Truy cập:
+# https://localhost:8443/
+# https://192.168.61.128:8443/
